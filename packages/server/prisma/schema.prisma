@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DebtStatus {
+  ACTIVE
+  PAID
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdDebts Debt[] @relation("CreatedDebts")
+  owedDebts    Debt[] @relation("OwedDebts")
+  payments     Payment[]
+}
+
+model Debt {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  totalAmount Float
+  status      DebtStatus @default(ACTIVE)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  createdById String
+  createdBy   User   @relation("CreatedDebts", fields: [createdById], references: [id])
+
+  owedToId String
+  owedTo   User   @relation("OwedDebts", fields: [owedToId], references: [id])
+
+  payments Payment[]
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  amount    Float
+  receipt   String?
+  notes     String?
+  paidAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  debtId    String
+  debt      Debt   @relation(fields: [debtId], references: [id])
+
+  paidById  String
+  paidBy    User   @relation(fields: [paidById], references: [id])
+}
