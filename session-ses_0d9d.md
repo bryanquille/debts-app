@@ -2,7 +2,7 @@
 
 **Session ID:** ses_0d9dcc120ffe1MNM1xkmhLN3zA
 **Created:** 7/2/2026, 11:01:11 PM
-**Updated:** 7/2/2026, 11:14:43 PM
+**Updated:** 7/3/2026, 4:42:33 PM
 
 ---
 
@@ -2971,6 +2971,766 @@ En el próximo paso puedo empezar a construir:
 4. **Frontend** — páginas de login, dashboard, etc.
 
 ¿Por dónde quieres empezar?
+
+---
+
+## User
+
+Ante de todo esto, planeemos super bien como va a ser la app, la arquitectura y las techs escogidas están muy bien. Pero vamos a tener distintas funcionalidades que no se han considerado aún. A continuación te describo que nomás vamos a tener y si necesitas saber algo hazme preguntas.
+1. Landing Page para promocionar la app.
+2. Login y Registro.
+3. Dashboard en dónde se mostraran las deudas actuales.
+4. Página de deudas liquidadas, en dónde se tendra el historial de las deudas que ya se han cancelado.
+5. Modal con formulario para ingreso de nueva deuda, aquí se tendra la posibilidad de enlazar a un usuario que es con el que se mantiene la deuda, y si no existe el usuario solo se puede agregar un nombre a la deuda.
+6. Modal para registrar pagos o abonos de una deuda en curso, en dónde se tendra la opción de subir un voucher de pago. El botón para abrir este modal debe estar en la deuda que se quiere realizar el pago o abono así se enlaza directamente con esa deuda.
+Adicional a todo esto debemos tomar en cuenta que el usuario que se registre en la app podra tener tanto la opción de deudas por pagar, como deudas por cobrar, y podra enlazar las deudas con otros usuarios.
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 119.2s)
+
+_Thinking:_
+
+The user wants to plan the app architecture more thoroughly before implementation. Let me think about this carefully and ask clarifying questions where needed.
+
+Let me re-read their requirements:
+
+1. **Landing Page** - promotional page for the app
+2. **Login & Register**
+3. **Dashboard** - shows current debts
+4. **Paid Debts Page** - history of paid/settled debts
+5. **Modal for new debt** - with ability to link to an existing user OR just add a name
+6. **Modal for payments** - with voucher upload, opened from a specific debt
+
+And key points:
+- Users can have both "debts to pay" (deudas por pagar) and "debts to collect" (deudas por cobrar)
+- Debts can be linked to other registered users
+- If the user isn't registered, you can just add a name
+
+Let me think about the data model implications:
+
+**User** roles: A user can be both a debtor (owes money) and a creditor (is owed money) simultaneously.
+
+**Debt** model needs to track:
+- Who created it (the debtor typically, but could be either)
+- Who owes whom
+- The debtor side
+- The creditor side
+- Status (active/paid/cancelled)
+
+Wait, let me reconsider. The user says:
+- "el usuario que se registre en la app podra tener tanto la opción de deudas por pagar, como deudas por cobrar"
+- So a registered user can have debts they need to pay AND debts they need to collect
+
+For the Debt model:
+- `createdById` - who registered the debt
+- `debtorId` - who owes the money (can be a registered user OR null if just a name)
+- `debtorName` - if the debtor is not a registered user, just store the name
+- `creditorId` - who is owed the money (can be a registered user OR null if just a name)
+- `creditorName` - if the creditor is not a registered user, just store the name
+- `totalAmount`
+- `description`
+- `status`
+
+Wait, let me think about this differently. The user said:
+- "enlazar a un usuario que es con el que se mantiene la deuda, y si no existe el usuario solo se puede agregar un nombre a la deuda"
+
+So when creating a debt, you link to the other person. If they're a registered user, you link them. If not, you just add their name.
+
+And the user said:
+- "el usuario que se registre en la app podra tener tanto la opción de deudas por pagar, como deudas por cobrar"
+
+So a user can have both debts they owe and debts they're owed.
+
+Let me think about who creates the debt. If the debtor creates the debt:
+- They select who they owe money to (the creditor)
+- If the creditor is registered, link them
+- If not, just add a name
+
+Or maybe the person who owes money creates the debt to track what they owe.
+
+Let me think about the flow:
+1. User A owes money to User B
+2. User A registers a debt saying "I owe $500 to User B"
+3. User A makes payments against this debt
+4. User B can see the debt and payments
+
+Or:
+1. User B is owed money by User A
+2. User B registers the debt saying "User A owes me $500"
+3. User A makes payments that User B can see
+
+Actually, the app seems to be primarily for the person who owes money to track their debts and payments. But the creditor can also see the debts.
+
+Let me think about the models more carefully:
+
+**Debt:**
+- `id`
+- `title` (e.g., "Loan for car repair")
+- `description` (optional)
+- `totalAmount`
+- `amountPaid` (calculated from payments or stored)
+- `status` (ACTIVE, PAID, CANCELLED)
+- `createdById` (who registered the debt)
+- `debtorId` (optional, FK to User - who owes money)
+- `debtorName` (if no registered user)
+- `creditorId` (optional, FK to User - who is owed money)
+- `creditorName` (if no registered user)
+- `createdAt`
+- `updatedAt`
+
+**Payment:**
+- `id`
+- `debtId`
+- `amount`
+- `receipt` (Cloudinary URL)
+- `notes`
+- `paidById` (who made the payment)
+- `paidAt`
+- `createdAt`
+
+Now, for the views:
+- **Dashboard**: shows ACTIVE debts where the user is either the debtor or creditor
+- **Paid Debts Page**: shows PAID debts where the user is either debtor or creditor
+- **New Debt Modal**: create a new debt, search for user or add name
+- **Payment Modal**: record a payment for a specific debt, upload voucher
+
+For the Dashboard, I need to think about how to display debts:
+- Debts I owe (I am the debtor)
+- Debts owed to me (I am the creditor)
+
+Let me also think about the Landing Page:
+- Hero section
+- Features
+- How it works
+- CTA to register/login
+
+Let me ask some clarifying questions:
+
+1. Who creates the debt? The debtor (person who owes) or the creditor (person who is owed)?
+   - From context: "registrar las deudas que tengo" suggests the debtor creates the debt
+   - But a creditor might also want to register that someone owes them
+
+2. For the landing page, do you want a simple page or something more elaborate?
+
+3. For linking users - should there be a search/autocomplete when creating a debt?
+
+Let me ask these questions to the user.
+
+Actually, I should present the overall plan and ask specific questions about the ambiguous parts.
+
+Buen análisis, déjame hacerte algunas preguntas para afinar el diseño antes de plasmarlo en un plan final.
+
+**Tool: question**
+
+**Input:**
+```json
+{
+  "questions": [
+    {
+      "question": "¿Quién crea la deuda? Por ej: si tú le debes $500 a María, ¿tú (el deudor) creas la deuda en la app, o María (el acreedor) la crea? ¿O ambos deberían poder crearla?",
+      "header": "Creación de deuda",
+      "options": [
+        {
+          "label": "Solo el deudor",
+          "description": "La persona que debe dinero crea la deuda para llevar el registro de sus pagos"
+        },
+        {
+          "label": "Ambos pueden",
+          "description": "Tanto el que debe como el que presta pueden registrar la deuda"
+        }
+      ]
+    },
+    {
+      "question": "Sobre la Landing Page: ¿quieres algo sencillo (hero + features + CTA) o algo más elaborado con secciones como 'cómo funciona', testimonios, FAQ?",
+      "header": "Landing Page",
+      "options": [
+        {
+          "label": "Sencilla",
+          "description": "Hero, características principales, botón de registro"
+        },
+        {
+          "label": "Completa",
+          "description": "Hero, features, cómo funciona, FAQ, footer"
+        }
+      ]
+    },
+    {
+      "question": "Cuando buscas un usuario para enlazar una deuda, ¿quieres un campo de búsqueda con autocompletado que muestre usuarios registrados, o basta con escribir el email y si existe lo vincula automáticamente?",
+      "header": "Búsqueda de usuarios",
+      "options": [
+        {
+          "label": "Autocompletado",
+          "description": "Escribís y te muestra sugerencias de usuarios registrados"
+        },
+        {
+          "label": "Email directo",
+          "description": "Ingresás el email y el sistema lo vincula si existe, sino solo guarda el nombre"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Output:**
+```
+User has answered your questions: "¿Quién crea la deuda? Por ej: si tú le debes $500 a María, ¿tú (el deudor) creas la deuda en la app, o María (el acreedor) la crea? ¿O ambos deberían poder crearla?"="Ambos pueden", "Sobre la Landing Page: ¿quieres algo sencillo (hero + features + CTA) o algo más elaborado con secciones como 'cómo funciona', testimonios, FAQ?"="Empecemos con algo sencillo, y cuando ya se adquieran usuarios podemos mejorarla a una versión más completa.", "Cuando buscas un usuario para enlazar una deuda, ¿quieres un campo de búsqueda con autocompletado que muestre usuarios registrados, o basta con escribir el email y si existe lo vincula automáticamente?"="Autocompletado". You can now continue with the user's answers in mind.
+```
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 22.2s)
+
+_Thinking:_
+
+Great, now I have a clear picture. Let me plan the full architecture:
+
+1. **Both can create debts** - This means when creating a debt, the user selects who is the debtor and who is the creditor. The creator is just the person registering it.
+
+2. **Simple landing page** - Hero + features + CTA
+
+3. **Autocomplete** - Search for registered users when creating a debt
+
+Let me now design the complete architecture and present it as a plan.
+
+### Data Model
+
+```
+User
+  id              String
+  name            String
+  email           String (unique)
+  password        String (hashed)
+  avatar          String? (Cloudinary URL)
+  createdAt       DateTime
+  updatedAt       DateTime
+
+Debt
+  id              String
+  title           String
+  description     String?
+  totalAmount     Float
+  status          DebtStatus (ACTIVE, PAID, CANCELLED)
+  createdById     String (FK -> User - who registered the debt)
+  debtorId        String? (FK -> User - who owes money)
+  debtorName      String? (fallback if user not registered)
+  creditorId      String? (FK -> User - who is owed money)
+  creditorName    String? (fallback if user not registered)
+  createdAt       DateTime
+  updatedAt       DateTime
+
+Payment
+  id              String
+  debtId          String (FK -> Debt)
+  amount          Float
+  receipt         String? (Cloudinary URL)
+  notes           String?
+  paidById        String (FK -> User - who made the payment)
+  paidAt          DateTime
+  createdAt       DateTime
+  updatedAt       DateTime
+```
+
+### Pages
+
+**Landing (`/`)**
+- Hero section with app name, tagline, CTA buttons
+- Features section (Register debts, Track payments, Upload vouchers, Shared view)
+- Footer
+
+**Auth**
+- `/login` - Login form (email, password)
+- `/register` - Registration form (name, email, password)
+
+**Dashboard (`/dashboard`)**
+- Two tabs/sections:
+  - "Debo" (I owe) - Debts where current user is debtorId
+  - "Me deben" (Owed to me) - Debts where current user is creditorId
+- Each debt card shows: title, amount, progress, other party name
+- Button to create new debt → opens modal
+- Debts are filtered by status = ACTIVE
+
+**Debt Detail (`/debts/:id`)**
+- Full debt info
+- Payment history list
+- Button to add payment → opens payment modal
+- Each payment shows: amount, date, receipt image (clickable), notes
+
+**Paid Debts (`/debts/paid`)**
+- Same layout as dashboard but showing status = PAID
+- Historical view
+
+### Modals
+
+**New Debt Modal**
+- Title
+- Description (optional)
+- Total Amount
+- Search field for other party (autocomplete)
+  - If registered user selected → debtorId/creditorId set
+  - Otherwise → debtorName/creditorName set
+
+**Payment Modal**
+- Amount
+- Notes (optional)
+- File upload (receipt/voucher) → Cloudinary
+- Date of payment (default: now)
+- Linked to a specific debt
+
+### API Routes
+
+```
+# Auth
+POST   /api/auth/register      { name, email, password }
+POST   /api/auth/login         { email, password }
+POST   /api/auth/logout
+GET    /api/auth/me            (current user)
+
+# Users (for autocomplete)
+GET    /api/users/search?q=    (search users by name/email)
+
+# Debts
+GET    /api/debts              (my debts - both as debtor and creditor, filtered by status=ACTIVE)
+GET    /api/debts/paid         (my debts with status=PAID)
+GET    /api/debts/:id
+POST   /api/debts              { title, description, totalAmount, debtorEmail?, debtorName?, creditorEmail?, creditorName? }
+PATCH  /api/debts/:id          (update status, etc)
+
+# Payments
+GET    /api/debts/:id/payments
+POST   /api/debts/:id/payments  (multipart/form-data: amount, notes, receipt file)
+```
+
+### Frontend Components
+
+```
+pages/
+  Landing.tsx
+  Login.tsx
+  Register.tsx
+  Dashboard.tsx
+  PaidDebts.tsx
+  DebtDetail.tsx
+
+components/
+  layout/
+    Navbar.tsx
+    ProtectedRoute.tsx
+  debts/
+    DebtCard.tsx
+    DebtList.tsx
+    NewDebtModal.tsx
+    PaymentModal.tsx
+    UserSearch.tsx (autocomplete)
+  ui/ (shadcn-style)
+    Button.tsx
+    Input.tsx
+    Modal.tsx
+    Card.tsx
+    ...
+```
+
+### Auth Flow
+- JWT stored in httpOnly cookie (more secure)
+- Or stored in localStorage + Authorization header
+- I'll recommend httpOnly cookies for better security
+
+### Tech stack (refined)
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18 + TypeScript + Vite |
+| Routing | React Router v6 |
+| Data Fetching | TanStack Query |
+| Forms | React Hook Form + Zod resolver |
+| Styling | TailwindCSS |
+| Icons | Lucide React |
+| Backend | Express + TypeScript |
+| ORM | Prisma + PostgreSQL |
+| Auth | JWT (httpOnly cookies) |
+| File Upload | Multer → Cloudinary |
+| Validation | Zod (shared) |
+| HTTP Client | Axios |
+
+Now let me present this plan to the user for approval before implementation.
+
+Perfecto, con tus respuestas ya tengo una visión clara y completa. Aquí está el **plan detallado**:
+
+---
+
+## Plan Definitivo — Debt Tracker
+
+### 1. Modelo de datos (Prisma)
+
+```
+User                    Debt                              Payment
+┌──────────┐            ┌──────────────────┐             ┌──────────────┐
+│ id       │            │ id               │             │ id           │
+│ name     │            │ title            │             │ amount       │
+│ email    │            │ description?     │             │ receipt?     │ (Cloudinary)
+│ password │            │ totalAmount      │             │ notes?       │
+│ avatar?  │            │ status           │── enum ──   │ paidById ────│──> User
+│ createdAt│            │                  │  ACTIVE     │ debtId ──────│──> Debt
+│ updatedAt│            │ createdById ─────│──> User     │ paidAt       │
+└──────────┘            │ debtorId? ───────│──> User     │ createdAt    │
+                        │ debtorName?      │ (fallback)  │ updatedAt    │
+                        │ creditorId? ─────│──> User     └──────────────┘
+                        │ creditorName?    │ (fallback)
+                        │ createdAt        │
+                        │ updatedAt        │
+                        └──────────────────┘
+```
+
+**Reglas:**
+- `debtorId` o `debtorName` — si el deudor está registrado se usa el ID, si no, solo el nombre
+- `creditorId` o `creditorName` — igual para el acreedor
+- `createdById` — quien registró la deuda (puede ser el deudor o el acreedor)
+
+### 2. Arquitectura de navegación
+
+```
+/                    → Landing (hero + features + CTA)
+/login               → Login
+/register            → Registro
+/dashboard           → Dashboard (deudas activas, tabs: "Debo" / "Me deben")
+/debts/paid          → Deudas liquidadas (historial)
+/debts/:id           → Detalle de deuda + pagos
+```
+
+### 3. Modales
+
+| Modal | Disparador | Contenido |
+|-------|-----------|-----------|
+| **Nueva Deuda** | Botón "Nueva Deuda" | Title, Description, Total Amount, UserSearch (autocomplete) para deudor/acreedor |
+| **Nuevo Pago** | Botón en cada deuda | Amount, Notes, File Upload (voucher → Cloudinary), ligado automáticamente a esa deuda |
+
+### 4. API completa
+
+```
+POST   /api/auth/register           → Registro
+POST   /api/auth/login              → Login (JWT en httpOnly cookie)
+POST   /api/auth/logout             → Logout
+GET    /api/auth/me                 → Usuario actual
+
+GET    /api/users/search?q=         → Autocompletado de usuarios
+
+GET    /api/debts                   → Deudas activas del usuario (deudor o acreedor)
+GET    /api/debts/paid              → Deudas liquidadas
+GET    /api/debts/:id               → Detalle
+POST   /api/debts                   → Crear deuda
+
+GET    /api/debts/:id/payments      → Pagos de una deuda
+POST   /api/debts/:id/payments      → Registrar pago + subir voucher (multipart)
+```
+
+### 5. Frontend — Árbol de componentes
+
+```
+src/
+├── api/
+│   ├── auth.ts
+│   ├── debts.ts
+│   └── payments.ts
+├── components/
+│   ├── layout/
+│   │   ├── Navbar.tsx
+│   │   ├── ProtectedRoute.tsx
+│   │   └── Layout.tsx
+│   ├── debts/
+│   │   ├── DebtCard.tsx
+│   │   ├── DebtList.tsx
+│   │   ├── NewDebtModal.tsx
+│   │   ├── PaymentModal.tsx
+│   │   └── UserSearch.tsx
+│   └── ui/           → Componentes base (Button, Input, Modal, Badge, Avatar, Card)
+├── hooks/
+│   ├── useAuth.ts
+│   ├── useDebts.ts
+│   └── usePayments.ts
+├── pages/
+│   ├── Landing.tsx
+│   ├── Login.tsx
+│   ├── Register.tsx
+│   ├── Dashboard.tsx
+│   ├── PaidDebts.tsx
+│   └── DebtDetail.tsx
+├── context/
+│   └── AuthContext.tsx
+├── lib/
+│   ├── api.ts        → Axios instance
+│   └── utils.ts
+├── App.tsx
+└── main.tsx
+```
+
+### 6. Auth flow
+
+- Login → servidor valida credenciales → genera JWT → lo envía como **httpOnly cookie**
+- Frontend usa Axios con `withCredentials: true`
+- AuthContext maneja sesión (llama a `GET /api/auth/me` al cargar)
+- ProtectedRoute redirige a `/login` si no hay sesión
+
+### 7. Dashboard — Vistas
+
+**Tab "Debo"** — deudas donde `debtorId = currentUser.id`
+- Muestra: a quién le debe, monto total, cuanto ha pagado, barra de progreso
+
+**Tab "Me deben"** — deudas donde `creditorId = currentUser.id`
+- Muestra: quién le debe, monto total, cuanto ha pagado, barra de progreso
+
+### 8. Orden de implementación (por milestone)
+
+```
+Milestone 1: Auth (backend + frontend)
+Milestone 2: CRUD deudas + Dashboard
+Milestone 3: Pagos + subida de comprobantes
+Milestone 4: Detalle de deuda + historial
+Milestone 5: Deudas liquidadas
+Milestone 6: Landing Page
+Milestone 7: Autocompletado de usuarios
+Milestone 8: Refinamientos y polish
+```
+
+---
+
+¿Qué te parece el plan? ¿Algo que ajustarías o agregarías antes de empezar la implementación?
+
+---
+
+## User
+
+Esta muy bien, pero cambiemos algo que estaba omitiendo, para el routing usa tanstack router en lugar de React Router
+
+---
+
+## Assistant (Plan · DeepSeek V4 Flash Free · 17.3s)
+
+_Thinking:_
+
+The user wants to use TanStack Router instead of React Router. Let me think about what changes are needed and present the updated plan.
+
+TanStack Router (formerly TanStack Router) is a type-safe router for React apps. Key differences from React Router:
+
+1. **File-based or config-based routing** - TanStack Router uses a route tree definition
+2. **Type-safe** - Full type safety for route params, search params, etc.
+3. **Built-in loaders** - Similar to Remix/Next.js, routes can have loaders for data fetching
+4. **Search params** - First-class support for search params with validation (Zod integration)
+5. **No route string matching** - Everything is type-safe
+
+Let me think about how the routing would look with TanStack Router:
+
+```typescript
+import { createRouter, createRoute, createRootRoute } from "@tanstack/react-router";
+
+const rootRoute = createRootRoute({
+  component: Layout,
+});
+
+const landingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: Landing,
+});
+
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/login",
+  component: Login,
+});
+
+const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/register",
+  component: Register,
+});
+
+const dashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/dashboard",
+  component: Dashboard,
+});
+
+const paidDebtsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/debts/paid",
+  component: PaidDebts,
+});
+
+const debtDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/debts/$debtId",
+  component: DebtDetail,
+});
+
+const routeTree = rootRoute.addChildren([
+  landingRoute,
+  loginRoute,
+  registerRoute,
+  dashboardRoute,
+  paidDebtsRoute,
+  debtDetailRoute,
+]);
+
+const router = createRouter({ routeTree });
+```
+
+For TanStack Router, I need different dependencies:
+- `@tanstack/react-router` instead of `react-router-dom`
+- No need for `react-router-dom` at all
+
+The key changes in the architecture:
+1. Replace `react-router-dom` with `@tanstack/react-router` in package.json
+2. Replace BrowserRouter/Routes/Route with TanStack Router's route tree
+3. Replace `useNavigate`, `Link`, `useParams` with TanStack equivalents
+4. Add route definitions in a dedicated file
+5. Use TanStack Router's `useRouter`, `Link`, `useNavigate`, `useParams` (from `@tanstack/react-router`)
+
+Let me also think about the dependencies:
+- `@tanstack/react-router` needs `@tanstack/history` (it bundles it or is a peer dep)
+- Need `tsr:dev` scripts for generating the route tree (or use file-based routing)
+
+Actually, TanStack Router v1 uses a code-based approach where you define the route tree manually. They also have a file-based router approach with their CLI.
+
+Let me check what's the latest approach. With TanStack Router, you can:
+1. Use the file-based approach with `@tanstack/router-plugin` and `@tanstack/router-cli`
+2. Use the code-based approach by defining routes programmatically
+
+For a project like this, the code-based approach is simpler and more straightforward. Let me present the updated plan.
+
+Key changes to the plan:
+
+**Dependencies change:**
+- Remove: `react-router-dom`
+- Add: `@tanstack/react-router`
+
+**Route configuration:**
+- Create `src/router.tsx` with the route tree
+- Routes are defined using `createRootRoute`, `createRoute`, `createRouter`
+
+**Component changes:**
+- `App.tsx` renders `<RouterProvider router={router}>` instead of `<BrowserRouter>`
+- Navigation uses `<Link>` from `@tanstack/react-router`
+- `useNavigate()` from `@tanstack/react-router`
+- `useParams({ from: '/debts/$debtId' })` for route params
+
+**Protected routes:**
+- Use `beforeLoad` option on routes to check auth
+- Redirect to login if not authenticated
+
+Let me present this to the user.
+
+Perfecto, TanStack Router es una excelente decisión. Te da **tipado fuerte en las rutas**, **loaders integrados** para data fetching y **validación de search params con Zod**. Vamos a ajustar el plan:
+
+## Cambios con TanStack Router
+
+### Dependencias
+
+```
+Sustituir:  react-router-dom
+Añadir:     @tanstack/react-router
+```
+
+### Cómo cambia el routing
+
+En vez de `<BrowserRouter>` + `<Routes>` + `<Route>`, se define un **árbol de rutas** tipado:
+
+```
+src/router.tsx
+┌────────────────────────────────────────────┐
+│ rootRoute  (/layout.tsx → Layout)          │
+│  ├── "/"              → Landing            │
+│  ├── "/login"         → Login              │
+│  ├── "/register"      → Register           │
+│  ├── "/dashboard"     → Dashboard          │ ← protected
+│  ├── "/debts/paid"    → PaidDebts          │ ← protected
+│  └── "/debts/$debtId" → DebtDetail         │ ← protected
+└────────────────────────────────────────────┘
+```
+
+### Protección de rutas con `beforeLoad`
+
+TanStack Router tiene un hook `beforeLoad` en cada ruta:
+
+```typescript
+const dashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/dashboard",
+  beforeLoad: async ({ context }) => {
+    if (!context.auth.isAuthenticated) {
+      throw redirect({ to: "/login" });
+    }
+  },
+  component: Dashboard,
+});
+```
+
+Esto reemplaza a `ProtectedRoute` como wrapper.
+
+### Loaders integrados
+
+Cada ruta puede tener su propio loader para fetching de datos:
+
+```typescript
+const dashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/dashboard",
+  loader: async ({ context }) => {
+    return context.api.getDebts();
+  },
+  component: Dashboard,
+});
+```
+
+Y en el componente se accede con `useLoaderData({ from: dashboardRoute.id })`.
+
+### Diferencia clave con React Router
+
+| Aspecto | React Router | TanStack Router |
+|---------|-------------|-----------------|
+| Tipo de rutas | Strings no tipados `"/debts/:id"` | Tipado completo `"/debts/$debtId"` |
+| Search params | `useSearchParams()` sin tipos | `useSearch()` con esquema Zod |
+| Data fetching | `useEffect` o loader externo | `loader` + `useLoaderData` |
+| Navegación | `useNavigate()` sin tipos | `useNavigate()` con tipos |
+| Enrutado | `<Routes>` + `<Route>` | `createRoute()` + árbol |
+
+### Archivos que cambian respecto al plan anterior
+
+```
+NUEVOS:
+  src/router.tsx           → Árbol de rutas
+  src/routeTree.gen.ts     → Generado automáticamente (opcional con CLI)
+
+MODIFICADOS:
+  src/main.tsx             → RouterProvider en vez de BrowserRouter
+  src/App.tsx              → Solo RouterProvider, sin Routes
+  src/context/AuthContext.tsx → Pasa auth al router context
+
+ELIMINADOS:
+  components/layout/ProtectedRoute.tsx → Reemplazado por beforeLoad
+
+MISMO COMPORTAMIENTO (solo cambia import):
+  Link          → @tanstack/react-router
+  useNavigate   → @tanstack/react-router
+  useParams     → @tanstack/react-router (con ruta tipada)
+```
+
+### Plan de implementación actualizado
+
+```
+Milestone 1: Auth + Router setup
+Milestone 2: CRUD deudas + Dashboard
+Milestone 3: Pagos + subida de comprobantes
+Milestone 4: Detalle de deuda + historial
+Milestone 5: Deudas liquidadas
+Milestone 6: Landing Page
+Milestone 7: Autocompletado de usuarios
+Milestone 8: Refinamientos
+```
+
+---
+
+¿Te parece bien este enfoque con TanStack Router? Si estás de acuerdo, puedo empezar con el **Milestone 1**: configuración del router + auth completo (backend y frontend).
 
 ---
 
