@@ -21,9 +21,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  createdDebts Debt[] @relation("CreatedDebts")
-  owedDebts    Debt[] @relation("OwedDebts")
-  payments     Payment[]
+  createdDebts    Debt[] @relation("CreatedDebts")
+  debtsAsDebtor   Debt[] @relation("DebtorDebts")
+  debtsAsCreditor Debt[] @relation("CreditorDebts")
+  payments        Payment[]
 }
 
 model Debt {
@@ -38,8 +39,13 @@ model Debt {
   createdById String
   createdBy   User   @relation("CreatedDebts", fields: [createdById], references: [id])
 
-  owedToId String
-  owedTo   User   @relation("OwedDebts", fields: [owedToId], references: [id])
+  debtorId    String?
+  debtor      User?  @relation("DebtorDebts", fields: [debtorId], references: [id])
+  debtorName  String?
+
+  creditorId    String?
+  creditor      User?  @relation("CreditorDebts", fields: [creditorId], references: [id])
+  creditorName  String?
 
   payments Payment[]
 }

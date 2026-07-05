@@ -4,6 +4,10 @@ import helmet from "helmet";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
+import authRoutes from "./routes/auth.js";
+import usersRoutes from "./routes/users.js";
+import debtsRoutes from "./routes/debts.js";
+import paymentsRoutes from "./routes/payments.js";
 
 dotenv.config();
 
@@ -22,6 +26,11 @@ app.use(morgan("dev"));
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
+
+app.use("/api/auth", authRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/debts", paymentsRoutes);
+app.use("/api/debts", debtsRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
