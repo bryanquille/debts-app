@@ -1,0 +1,84 @@
+// Este archivo es el schema de Prisma. Define todos los modelos (tablas) de nuestra BD.
+// Prisma se encarga de:
+// 1. Generar las tablas SQL en PostgreSQL
+// 2. Generar un cliente TypeScript con tipos completos para hacer consultas
+//
+// "generator client" -> le dice a Prisma que genere el cliente TS
+// "datasource db" -> configura la conexión a PostgreSQL
+//   provider = "postgresql" -> usamos PostgreSQL
+//   env("DATABASE_URL") -> la URL de conexión se lee del .env
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum: conjunto de valores fijos para el estado de una deuda
+enum DebtStatus {
+  ACTIVE              // Deuda activa, se pueden registrar pagos
+  PENDING_LIQUIDATION // El deudor solicitó liquidación, el acreedor debe revisar
+  SETTLED             // Liquidada oficialmente por el acreedor
+  CANCELLED           // Cancelada
+}
+
+// Modelo User: representa un usuario registrado en la aplicación
+// @id @default(uuid()) -> ID autogenerado con UUID (universally unique identifier)
+// @unique -> el email debe ser único en toda la tabla
+// String? -> campo opcional (puede ser null)
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String   // Se almacena hasheada con bcryptjs, nunca en texto plano
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones: un usuario puede tener muchas deudas como acreedor
+  debtsAsCreditor Debt[] @relation("Creditor")
+  // O como deudor (si está registrado)
+  debtsAsDebtor   Debt[] @relation("Debtor")
+  // Y puede hacer muchos pagos
+  payments        Payment[]
+}
+
+// Modelo Debt: representa una deuda
+// Decimal -> tipo de dato para dinero (precisión exacta, a diferencia de Float que tiene errores de redondeo)
+model Debt {
+  id          String     @id @default(uuid())
+  amount      Decimal    // Monto total de la deuda
+  description String?    // Descripción opcional (ej: "préstamo para el auto")
+  status      DebtStatus @default(ACTIVE) // Por defecto está activa
+  paidAmount  Decimal    @default(0)      // Cuánto se ha pagado hasta ahora
+  creditorId  String     // ID del usuario acreedor (quien prestó el dinero)
+  debtorId    String?    // ID del usuario deudor (solo si está registrado en la app)
+  debtorName  String?    // Nombre del deudor (si NO está registrado, usamos este campo)
+  dueDate     DateTime?  // Fecha de vencimiento opcional
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relaciones
+  creditor User   @relation("Creditor", fields: [creditorId], references: [id])
+  debtor   User?  @relation("Debtor", fields: [debtorId], references: [id])
+  payments Payment[]
+}
+
+// Modelo Payment: representa un pago o abono a una deuda
+model Payment {
+  id        String   @id @default(uuid())
+  amount    Decimal  // Monto del pago
+  debtId    String   // A qué deuda pertenece
+  userId    String   // Quién registró el pago
+  imageKey  String?  // Key del archivo en Uploadthing (para identificar el archivo)
+  imageUrl  String?  // URL pública de la imagen de comprobante
+  note      String?  // Nota opcional del pago
+  createdAt DateTime @default(now())
+
+  // Relaciones
+  debt Debt @relation(fields: [debtId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+}

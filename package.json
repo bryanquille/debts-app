@@ -1,0 +1,13 @@
+{
+  "name": "debts-app",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel -r run dev",
+    "dev:server": "pnpm --filter server run dev",
+    "dev:client": "pnpm --filter client run dev",
+    "build": "pnpm -r run build",
+    "db:migrate": "pnpm --filter server run db:migrate",
+    "db:push": "pnpm --filter server run db:push",
+    "db:studio": "pnpm --filter server run db:studio"
+  }
+}
