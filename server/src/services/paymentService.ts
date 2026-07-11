@@ -1,13 +1,6 @@
-// services/paymentService.ts — Lógica de negocio para pagos/abonos
-//
-// Cuando se registra un pago:
-// 1. Se crea el registro de pago en la BD
-// 2. Se actualiza el paidAmount de la deuda sumando el monto del pago
-// 3. Si el pago supera el monto total NO se cambia el estado automáticamente
-//    (el deudor debe solicitar la liquidación explícitamente)
-
 import prisma from "../utils/prisma.js";
 import { ForbiddenError, NotFoundError } from "../utils/errors.js";
+import * as notificationService from "./notificationService.js";
 
 export interface CreatePaymentInput {
   amount: number;
@@ -16,29 +9,35 @@ export interface CreatePaymentInput {
   imageKey?: string;
   imageUrl?: string;
   note?: string;
+  paymentDate?: string;
 }
 
 export async function createPayment(input: CreatePaymentInput) {
-  // Verificar que la deuda exista
-  const debt = await prisma.debt.findUnique({ where: { id: input.debtId } });
+  const debt = await prisma.debt.findUnique({
+    where: { id: input.debtId },
+    include: {
+      creditor: { select: { id: true, name: true } },
+      debtor: { select: { id: true, name: true } },
+    },
+  });
 
-  if (!debt) {
-    throw new NotFoundError("Debt not found");
-  }
+  if (!debt) throw new NotFoundError("Debt not found");
 
-  // Verificar que el usuario esté involucrado en la deuda
-  if (debt.creditorId !== input.userId && debt.debtorId !== input.userId) {
+  const isDebtor = debt.debtorId === input.userId;
+  const isCreditor = debt.creditorId === input.userId;
+
+  if (!isDebtor && !isCreditor) {
     throw new ForbiddenError("You are not involved in this debt");
   }
 
-  // Verificar que la deuda esté activa (no se pueden hacer pagos en deudas liquidadas/canceladas)
   if (debt.status !== "ACTIVE" && debt.status !== "PENDING_LIQUIDATION") {
     throw new ForbiddenError("Cannot make payments to a debt that is settled or cancelled");
   }
 
-  // Crear el pago y actualizar el paidAmount en una transacción
-  // Una transacción de Prisma asegura que AMBAS operaciones se ejecuten juntas
-  // (si una falla, ambas se revierten — como si nada hubiera pasado)
+  if (isCreditor && debt.debtorId !== null) {
+    throw new ForbiddenError("Only the debtor can register payments. The debtor has an account.");
+  }
+
   const [payment] = await prisma.$transaction([
     prisma.payment.create({
       data: {
@@ -48,46 +47,42 @@ export async function createPayment(input: CreatePaymentInput) {
         imageKey: input.imageKey || null,
         imageUrl: input.imageUrl || null,
         note: input.note || null,
+        paymentDate: input.paymentDate ? new Date(input.paymentDate) : new Date(),
       },
       include: {
-        user: {
-          select: { id: true, name: true },
-        },
+        user: { select: { id: true, name: true } },
       },
     }),
     prisma.debt.update({
       where: { id: input.debtId },
-      data: {
-        paidAmount: {
-          increment: input.amount, // Incrementa el paidAmount actual
-        },
-      },
+      data: { paidAmount: { increment: input.amount } },
     }),
   ]);
+
+  const counterpartyId = isCreditor ? debt.debtorId : debt.creditorId;
+  if (counterpartyId) {
+    await notificationService.createNotification({
+      userId: counterpartyId,
+      type: "PAYMENT_RECEIVED",
+      title: "Pago registrado",
+      message: `Se ha registrado un pago de ${input.amount} en "${debt.description || "sin descripción"}"`,
+      debtId: debt.id,
+    });
+  }
 
   return payment;
 }
 
 export async function getPaymentsByDebt(debtId: string, userId: string) {
-  // Verificar que la deuda exista
   const debt = await prisma.debt.findUnique({ where: { id: debtId } });
-
-  if (!debt) {
-    throw new NotFoundError("Debt not found");
-  }
-
-  // Verificar que el usuario esté involucrado
+  if (!debt) throw new NotFoundError("Debt not found");
   if (debt.creditorId !== userId && debt.debtorId !== userId) {
     throw new ForbiddenError("You are not involved in this debt");
   }
 
   const payments = await prisma.payment.findMany({
     where: { debtId },
-    include: {
-      user: {
-        select: { id: true, name: true },
-      },
-    },
+    include: { user: { select: { id: true, name: true } } },
     orderBy: { createdAt: "desc" },
   });
 

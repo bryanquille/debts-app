@@ -5,8 +5,9 @@ import * as debtService from "../services/debtService.js";
 const createDebtSchema = z.object({
   amount: z.number().positive("Amount must be positive"),
   description: z.string().optional(),
-  debtorId: z.string().uuid().optional(),
-  debtorName: z.string().optional(),
+  role: z.enum(["creditor", "debtor"]),
+  counterpartyId: z.string().uuid().optional(),
+  counterpartyName: z.string().optional(),
   dueDate: z.string().optional(),
 });
 
@@ -27,7 +28,8 @@ export async function createDebt(req: Request, res: Response) {
 
 export async function getDebts(req: Request, res: Response) {
   const status = req.query.status as string | undefined;
-  const debts = await debtService.getDebts(req.user!.userId, status);
+  const role = req.query.role as string | undefined;
+  const debts = await debtService.getDebts(req.user!.userId, status, role);
   res.json(debts);
 }
 
@@ -60,4 +62,28 @@ export async function cancelDebt(req: Request, res: Response) {
   const id = req.params.id as string;
   const debt = await debtService.cancelDebt(id, req.user!.userId);
   res.json(debt);
+}
+
+export async function requestDeletion(req: Request, res: Response) {
+  const id = req.params.id as string;
+  const result = await debtService.requestDeletion(id, req.user!.userId);
+  res.json(result);
+}
+
+export async function approveDeletion(req: Request, res: Response) {
+  const id = req.params.id as string;
+  const result = await debtService.approveDeletion(id, req.user!.userId);
+  res.json(result);
+}
+
+export async function rejectDeletion(req: Request, res: Response) {
+  const id = req.params.id as string;
+  const result = await debtService.rejectDeletion(id, req.user!.userId);
+  res.json(result);
+}
+
+export async function getDeletionStatus(req: Request, res: Response) {
+  const id = req.params.id as string;
+  const result = await debtService.getDebtForDeletionStatus(id, req.user!.userId);
+  res.json(result);
 }

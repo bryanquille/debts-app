@@ -1,9 +1,3 @@
-// types/index.ts — Tipos compartidos entre frontend y backend
-//
-// Estos tipos reflejan la estructura de datos del backend.
-// Al usar Prisma + TypeScript en el backend, los tipos son generados automáticamente,
-// pero aquí los definimos manualmente para el frontend.
-
 export interface User {
   id: string;
   name: string;
@@ -20,8 +14,10 @@ export interface Debt {
   status: DebtStatus;
   paidAmount: number;
   creditorId: string;
+  creditorName: string | null;
   debtorId: string | null;
   debtorName: string | null;
+  deletionRequestedBy: string | null;
   dueDate: string | null;
   createdAt: string;
   updatedAt: string;
@@ -39,8 +35,20 @@ export interface Payment {
   imageKey: string | null;
   imageUrl: string | null;
   note: string | null;
+  paymentDate: string;
   createdAt: string;
   user: { id: string; name: string };
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  debtId: string | null;
+  read: boolean;
+  createdAt: string;
 }
 
 export interface AuthResponse {

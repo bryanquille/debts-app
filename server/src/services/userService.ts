@@ -1,7 +1,3 @@
-// services/userService.ts — Lógica de negocio para usuarios
-// De momento solo tiene perfil propio, pero aquí iría la lógica de
-// actualizar avatar, cambiar contraseña, etc.
-
 import prisma from "../utils/prisma.js";
 import { NotFoundError } from "../utils/errors.js";
 
@@ -53,13 +49,17 @@ export async function updateProfile(userId: string, input: UpdateProfileInput) {
   return user;
 }
 
-export async function searchUsers(query: string) {
-  // Buscar usuarios por nombre o email (para vincular deudor al crear deuda)
+export async function searchUsers(query: string, excludeUserId?: string) {
   const users = await prisma.user.findMany({
     where: {
-      OR: [
-        { name: { contains: query, mode: "insensitive" } },
-        { email: { contains: query, mode: "insensitive" } },
+      AND: [
+        excludeUserId ? { id: { not: excludeUserId } } : {},
+        {
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { email: { contains: query, mode: "insensitive" } },
+          ],
+        },
       ],
     },
     select: {
@@ -68,7 +68,7 @@ export async function searchUsers(query: string) {
       email: true,
       avatar: true,
     },
-    take: 10, // Máximo 10 resultados
+    take: 10,
   });
 
   return users;

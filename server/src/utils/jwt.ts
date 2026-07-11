@@ -10,8 +10,15 @@
 
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret";
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "fallback-refresh-secret";
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET no está definido en el archivo .env");
+}
+if (!process.env.JWT_REFRESH_SECRET) {
+  throw new Error("JWT_REFRESH_SECRET no está definido en el archivo .env");
+}
+
+const JWT_SECRET: string = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET: string = process.env.JWT_REFRESH_SECRET;
 
 export interface TokenPayload {
   userId: string;

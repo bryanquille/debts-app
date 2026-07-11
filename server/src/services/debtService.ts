@@ -1,24 +1,15 @@
-// services/debtService.ts — Lógica de negocio para deudas
-//
-// Reglas de negocio:
-// - Cualquier usuario registrado puede crear una deuda (como acreedor o deudor)
-// - El debtorId es opcional (el deudor puede no estar registrado)
-// - Si no hay debtorId, se usa debtorName para identificar al deudor
-// - Solo el acreedor puede editar/cancelar una deuda activa
-// - Solo el deudor puede solicitar liquidación (y debe haber pagado >= monto total)
-// - Solo el acreedor puede liquidar la deuda (cambiar estado a SETTLED)
-
 import prisma from "../utils/prisma.js";
 import { ForbiddenError, NotFoundError } from "../utils/errors.js";
-import type { DebtStatus } from "@prisma/client";
+import * as notificationService from "./notificationService.js";
 
 export interface CreateDebtInput {
   amount: number;
   description?: string;
-  debtorId?: string;
-  debtorName?: string;
+  role: "creditor" | "debtor";
+  counterpartyId?: string;
+  counterpartyName?: string;
   dueDate?: string;
-  creditorId: string; // Viene del token JWT (usuario autenticado)
+  creditorId: string;
 }
 
 export interface UpdateDebtInput {
@@ -28,51 +19,63 @@ export interface UpdateDebtInput {
 }
 
 export async function createDebt(input: CreateDebtInput) {
-  // Si se proporciona debtorId, verificar que el usuario exista
-  if (input.debtorId) {
-    const debtor = await prisma.user.findUnique({
-      where: { id: input.debtorId },
-    });
-    if (!debtor) {
-      throw new NotFoundError("Debtor user not found");
+  let creditorId: string;
+  let debtorId: string | null = null;
+  let debtorName: string | null = null;
+  let creditorName: string | null = null;
+
+  if (input.role === "creditor") {
+    creditorId = input.creditorId;
+    if (input.counterpartyId) {
+      const counterparty = await prisma.user.findUnique({ where: { id: input.counterpartyId } });
+      if (!counterparty) throw new NotFoundError("User not found");
+      debtorId = input.counterpartyId;
+    }
+    debtorName = input.counterpartyName || null;
+  } else {
+    debtorId = input.creditorId;
+    if (input.counterpartyId) {
+      const counterparty = await prisma.user.findUnique({ where: { id: input.counterpartyId } });
+      if (!counterparty) throw new NotFoundError("User not found");
+      creditorId = input.counterpartyId;
+    } else {
+      creditorId = input.creditorId;
+      creditorName = input.counterpartyName || null;
     }
   }
 
-  // Crear la deuda en la BD
   const debt = await prisma.debt.create({
     data: {
       amount: input.amount,
       description: input.description || null,
-      debtorId: input.debtorId || null,
-      debtorName: input.debtorName || null,
-      creditorId: input.creditorId,
+      debtorId,
+      debtorName,
+      creditorName,
+      creditorId,
       dueDate: input.dueDate ? new Date(input.dueDate) : null,
       paidAmount: 0,
       status: "ACTIVE",
     },
     include: {
-      creditor: {
-        select: { id: true, name: true, email: true },
-      },
-      debtor: {
-        select: { id: true, name: true, email: true },
-      },
+      creditor: { select: { id: true, name: true, email: true } },
+      debtor: { select: { id: true, name: true, email: true } },
     },
   });
 
   return debt;
 }
 
-export async function getDebts(userId: string, status?: string) {
-  // Buscar deudas donde el usuario sea acreedor O deudor
-  const where: any = {
-    OR: [
-      { creditorId: userId },
-      { debtorId: userId },
-    ],
-  };
+export async function getDebts(userId: string, status?: string, role?: string) {
+  const where: any = {};
 
-  // Filtrar por estado si se especifica
+  if (role === "creditor") {
+    where.creditorId = userId;
+  } else if (role === "debtor") {
+    where.debtorId = userId;
+  } else {
+    where.OR = [{ creditorId: userId }, { debtorId: userId }];
+  }
+
   if (status && ["ACTIVE", "PENDING_LIQUIDATION", "SETTLED", "CANCELLED"].includes(status)) {
     where.status = status;
   }
@@ -80,15 +83,9 @@ export async function getDebts(userId: string, status?: string) {
   const debts = await prisma.debt.findMany({
     where,
     include: {
-      creditor: {
-        select: { id: true, name: true, email: true },
-      },
-      debtor: {
-        select: { id: true, name: true, email: true },
-      },
-      _count: {
-        select: { payments: true },
-      },
+      creditor: { select: { id: true, name: true, email: true } },
+      debtor: { select: { id: true, name: true, email: true } },
+      _count: { select: { payments: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -100,28 +97,16 @@ export async function getDebtById(debtId: string, userId: string) {
   const debt = await prisma.debt.findUnique({
     where: { id: debtId },
     include: {
-      creditor: {
-        select: { id: true, name: true, email: true },
-      },
-      debtor: {
-        select: { id: true, name: true, email: true },
-      },
+      creditor: { select: { id: true, name: true, email: true } },
+      debtor: { select: { id: true, name: true, email: true } },
       payments: {
-        include: {
-          user: {
-            select: { id: true, name: true },
-          },
-        },
+        include: { user: { select: { id: true, name: true } } },
         orderBy: { createdAt: "desc" },
       },
     },
   });
 
-  if (!debt) {
-    throw new NotFoundError("Debt not found");
-  }
-
-  // Verificar que el usuario esté involucrado en la deuda
+  if (!debt) throw new NotFoundError("Debt not found");
   if (debt.creditorId !== userId && debt.debtorId !== userId) {
     throw new ForbiddenError("You are not involved in this debt");
   }
@@ -129,26 +114,11 @@ export async function getDebtById(debtId: string, userId: string) {
   return debt;
 }
 
-export async function updateDebt(
-  debtId: string,
-  userId: string,
-  input: UpdateDebtInput
-) {
+export async function updateDebt(debtId: string, userId: string, input: UpdateDebtInput) {
   const debt = await prisma.debt.findUnique({ where: { id: debtId } });
-
-  if (!debt) {
-    throw new NotFoundError("Debt not found");
-  }
-
-  // Solo el acreedor puede editar
-  if (debt.creditorId !== userId) {
-    throw new ForbiddenError("Only the creditor can edit this debt");
-  }
-
-  // Solo se puede editar si está activa
-  if (debt.status !== "ACTIVE") {
-    throw new ForbiddenError("Cannot edit a debt that is not active");
-  }
+  if (!debt) throw new NotFoundError("Debt not found");
+  if (debt.creditorId !== userId) throw new ForbiddenError("Only the creditor can edit this debt");
+  if (debt.status !== "ACTIVE") throw new ForbiddenError("Cannot edit a debt that is not active");
 
   const updatedDebt = await prisma.debt.update({
     where: { id: debtId },
@@ -158,12 +128,8 @@ export async function updateDebt(
       dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
     },
     include: {
-      creditor: {
-        select: { id: true, name: true, email: true },
-      },
-      debtor: {
-        select: { id: true, name: true, email: true },
-      },
+      creditor: { select: { id: true, name: true, email: true } },
+      debtor: { select: { id: true, name: true, email: true } },
     },
   });
 
@@ -172,39 +138,28 @@ export async function updateDebt(
 
 export async function requestLiquidation(debtId: string, userId: string) {
   const debt = await prisma.debt.findUnique({ where: { id: debtId } });
-
-  if (!debt) {
-    throw new NotFoundError("Debt not found");
-  }
-
-  // Solo el deudor puede solicitar liquidación
-  if (debt.debtorId !== userId) {
-    throw new ForbiddenError("Only the debtor can request liquidation");
-  }
-
-  // La deuda debe estar activa
-  if (debt.status !== "ACTIVE") {
-    throw new ForbiddenError("Debt is not active");
-  }
-
-  // El monto pagado debe ser >= al monto total
+  if (!debt) throw new NotFoundError("Debt not found");
+  if (debt.debtorId !== userId) throw new ForbiddenError("Only the debtor can request liquidation");
+  if (debt.status !== "ACTIVE") throw new ForbiddenError("Debt is not active");
   if (Number(debt.paidAmount) < Number(debt.amount)) {
-    throw new ForbiddenError(
-      "Cannot request liquidation: total amount not yet paid"
-    );
+    throw new ForbiddenError("Cannot request liquidation: total amount not yet paid");
   }
 
   const updatedDebt = await prisma.debt.update({
     where: { id: debtId },
     data: { status: "PENDING_LIQUIDATION" },
     include: {
-      creditor: {
-        select: { id: true, name: true, email: true },
-      },
-      debtor: {
-        select: { id: true, name: true, email: true },
-      },
+      creditor: { select: { id: true, name: true, email: true } },
+      debtor: { select: { id: true, name: true, email: true } },
     },
+  });
+
+  await notificationService.createNotification({
+    userId: debt.creditorId,
+    type: "LIQUIDATION_REQUEST",
+    title: "Solicitud de liquidación",
+    message: `El deudor ha solicitado liquidar la deuda "${debt.description || "sin descripción"}"`,
+    debtId: debt.id,
   });
 
   return updatedDebt;
@@ -212,68 +167,172 @@ export async function requestLiquidation(debtId: string, userId: string) {
 
 export async function settleDebt(debtId: string, userId: string) {
   const debt = await prisma.debt.findUnique({ where: { id: debtId } });
-
-  if (!debt) {
-    throw new NotFoundError("Debt not found");
-  }
-
-  // Solo el acreedor puede liquidar la deuda oficialmente
-  if (debt.creditorId !== userId) {
-    throw new ForbiddenError("Only the creditor can settle this debt");
-  }
-
-  // La deuda debe estar en estado PENDING_LIQUIDATION
-  if (debt.status !== "PENDING_LIQUIDATION") {
-    throw new ForbiddenError(
-      "Debt must be in PENDING_LIQUIDATION status to settle"
-    );
-  }
+  if (!debt) throw new NotFoundError("Debt not found");
+  if (debt.creditorId !== userId) throw new ForbiddenError("Only the creditor can settle this debt");
+  if (debt.status !== "PENDING_LIQUIDATION") throw new ForbiddenError("Debt must be in PENDING_LIQUIDATION status to settle");
 
   const updatedDebt = await prisma.debt.update({
     where: { id: debtId },
     data: { status: "SETTLED" },
     include: {
-      creditor: {
-        select: { id: true, name: true, email: true },
-      },
-      debtor: {
-        select: { id: true, name: true, email: true },
-      },
+      creditor: { select: { id: true, name: true, email: true } },
+      debtor: { select: { id: true, name: true, email: true } },
     },
   });
+
+  if (debt.debtorId) {
+    await notificationService.createNotification({
+      userId: debt.debtorId,
+      type: "DEBT_SETTLED",
+      title: "Deuda liquidada",
+      message: `El acreedor ha confirmado la liquidación de "${debt.description || "sin descripción"}"`,
+      debtId: debt.id,
+    });
+  }
 
   return updatedDebt;
 }
 
 export async function cancelDebt(debtId: string, userId: string) {
   const debt = await prisma.debt.findUnique({ where: { id: debtId } });
-
-  if (!debt) {
-    throw new NotFoundError("Debt not found");
-  }
-
-  // Solo el acreedor puede cancelar
-  if (debt.creditorId !== userId) {
-    throw new ForbiddenError("Only the creditor can cancel this debt");
-  }
-
-  // Solo se puede cancelar si está activa
-  if (debt.status !== "ACTIVE") {
-    throw new ForbiddenError("Cannot cancel a debt that is not active");
-  }
+  if (!debt) throw new NotFoundError("Debt not found");
+  if (debt.creditorId !== userId) throw new ForbiddenError("Only the creditor can cancel this debt");
+  if (debt.status !== "ACTIVE") throw new ForbiddenError("Cannot cancel a debt that is not active");
 
   const updatedDebt = await prisma.debt.update({
     where: { id: debtId },
     data: { status: "CANCELLED" },
     include: {
-      creditor: {
-        select: { id: true, name: true, email: true },
-      },
-      debtor: {
-        select: { id: true, name: true, email: true },
-      },
+      creditor: { select: { id: true, name: true, email: true } },
+      debtor: { select: { id: true, name: true, email: true } },
     },
   });
 
   return updatedDebt;
+}
+
+export async function requestDeletion(debtId: string, userId: string) {
+  const debt = await prisma.debt.findUnique({ where: { id: debtId } });
+  if (!debt) throw new NotFoundError("Debt not found");
+  if (debt.creditorId !== userId && debt.debtorId !== userId) {
+    throw new ForbiddenError("You are not involved in this debt");
+  }
+  if (debt.status !== "ACTIVE" && debt.status !== "PENDING_LIQUIDATION") {
+    throw new ForbiddenError("Cannot delete a debt that is already settled or cancelled");
+  }
+  if (debt.deletionRequestedBy) {
+    throw new ForbiddenError("A deletion request is already pending");
+  }
+
+  const counterpartyId = debt.creditorId === userId ? debt.debtorId : debt.creditorId;
+
+  await prisma.debt.update({
+    where: { id: debtId },
+    data: { deletionRequestedBy: userId },
+  });
+
+  if (counterpartyId) {
+    const requesterName = debt.creditorId === userId ? "El acreedor" : "El deudor";
+
+    await notificationService.createNotification({
+      userId: counterpartyId,
+      type: "DELETION_REQUEST",
+      title: "Solicitud de eliminación",
+      message: `${requesterName} solicita eliminar la deuda "${debt.description || "sin descripción"}"`,
+      debtId: debt.id,
+    });
+  }
+
+  return { message: "Deletion request sent" };
+}
+
+export async function approveDeletion(debtId: string, userId: string) {
+  const debt = await prisma.debt.findUnique({
+    where: { id: debtId },
+    include: {
+      creditor: { select: { name: true } },
+      debtor: { select: { name: true } },
+    },
+  });
+  if (!debt) throw new NotFoundError("Debt not found");
+  if (debt.creditorId !== userId && debt.debtorId !== userId) {
+    throw new ForbiddenError("You are not involved in this debt");
+  }
+  if (!debt.deletionRequestedBy) {
+    throw new ForbiddenError("No deletion request pending");
+  }
+  if (debt.deletionRequestedBy === userId) {
+    throw new ForbiddenError("You cannot approve your own deletion request");
+  }
+
+  const counterpartyId = debt.deletionRequestedBy;
+
+  await prisma.debt.update({
+    where: { id: debtId },
+    data: { status: "CANCELLED", deletionRequestedBy: null },
+  });
+
+  await notificationService.createNotification({
+    userId: counterpartyId,
+    type: "DELETION_APPROVED",
+    title: "Eliminación aprobada",
+    message: `La solicitud de eliminación de "${debt.description || "sin descripción"}" ha sido aprobada`,
+    debtId: debt.id,
+  });
+
+  return { message: "Deletion approved, debt cancelled" };
+}
+
+export async function rejectDeletion(debtId: string, userId: string) {
+  const debt = await prisma.debt.findUnique({
+    where: { id: debtId },
+    include: {
+      creditor: { select: { name: true } },
+      debtor: { select: { name: true } },
+    },
+  });
+  if (!debt) throw new NotFoundError("Debt not found");
+  if (debt.creditorId !== userId && debt.debtorId !== userId) {
+    throw new ForbiddenError("You are not involved in this debt");
+  }
+  if (!debt.deletionRequestedBy) {
+    throw new ForbiddenError("No deletion request pending");
+  }
+  if (debt.deletionRequestedBy === userId) {
+    throw new ForbiddenError("You cannot reject your own deletion request");
+  }
+
+  const counterpartyId = debt.deletionRequestedBy;
+
+  await prisma.debt.update({
+    where: { id: debtId },
+    data: { deletionRequestedBy: null },
+  });
+
+  await notificationService.createNotification({
+    userId: counterpartyId,
+    type: "DELETION_REJECTED",
+    title: "Eliminación rechazada",
+    message: `La solicitud de eliminación de "${debt.description || "sin descripción"}" ha sido rechazada`,
+    debtId: debt.id,
+  });
+
+  return { message: "Deletion request rejected" };
+}
+
+export async function getDebtForDeletionStatus(debtId: string, userId: string) {
+  const debt = await prisma.debt.findUnique({
+    where: { id: debtId },
+    select: {
+      id: true,
+      deletionRequestedBy: true,
+      creditorId: true,
+      debtorId: true,
+    },
+  });
+  if (!debt) throw new NotFoundError("Debt not found");
+  if (debt.creditorId !== userId && debt.debtorId !== userId) {
+    throw new ForbiddenError("You are not involved in this debt");
+  }
+  return debt;
 }

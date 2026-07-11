@@ -8,6 +8,7 @@
 // 5. Rutas
 // 6. Error handler (debe ir al final)
 
+import "dotenv/config";
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";

@@ -24,6 +24,6 @@ export async function searchUsers(req: Request, res: Response) {
     res.json([]);
     return;
   }
-  const users = await userService.searchUsers(query);
+  const users = await userService.searchUsers(query, req.user?.userId);
   res.json(users);
 }

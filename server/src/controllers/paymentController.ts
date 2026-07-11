@@ -7,6 +7,7 @@ const createPaymentSchema = z.object({
   imageKey: z.string().optional(),
   imageUrl: z.string().url().optional(),
   note: z.string().optional(),
+  paymentDate: z.string().optional(),
 });
 
 export async function createPayment(req: Request, res: Response) {
