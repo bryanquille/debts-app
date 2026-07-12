@@ -58,10 +58,16 @@ function DebtDetailPage() {
 
   const handleRequestDeletion = async () => {
     try {
-      await api.post(`/debts/${id}/request-deletion`);
-      sileo.success({ title: "Solicitud de eliminacion enviada" });
-      queryClient.invalidateQueries({ queryKey: ["debt", id] });
-      setDeleteModalOpen(false);
+      const res = await api.post(`/debts/${id}/request-deletion`);
+      if (res.data.message === "Debt cancelled") {
+        sileo.success({ title: "Deuda cancelada" });
+        queryClient.invalidateQueries({ queryKey: ["debts"] });
+        router.navigate({ to: "/debts" });
+      } else {
+        sileo.success({ title: "Solicitud de eliminacion enviada" });
+        queryClient.invalidateQueries({ queryKey: ["debt", id] });
+        setDeleteModalOpen(false);
+      }
     } catch (err: any) {
       sileo.error({ title: "Error", description: err.response?.data?.error || "Error al solicitar eliminacion" });
     }
@@ -164,7 +170,7 @@ function DebtDetailPage() {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-3 border-t pt-6 dark:border-gray-700 sm:gap-4">
+        <div className="mt-6 grid grid-cols-2 gap-3 border-t pt-6 dark:border-gray-700 sm:grid-cols-3 sm:gap-4">
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">Monto total</p>
             <p className="text-base font-bold text-gray-900 dark:text-gray-100 sm:text-xl">{formatCurrency(debt.amount)}</p>

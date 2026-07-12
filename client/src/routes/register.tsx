@@ -22,6 +22,7 @@ const registerSchema = z.object({
 
 export const Route = createFileRoute("/register")({
   beforeLoad: async () => {
+    await useAuthStore.getState().initialize();
     if (useAuthStore.getState().isAuthenticated) {
       throw redirect({ to: "/debts" });
     }

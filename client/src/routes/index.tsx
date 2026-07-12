@@ -5,6 +5,7 @@ import { ArrowRight, Shield, Wallet, BellRing, CreditCard, Landmark, Percent } f
 
 export const Route = createFileRoute("/")({
   beforeLoad: async () => {
+    await useAuthStore.getState().initialize();
     if (useAuthStore.getState().isAuthenticated) {
       throw redirect({ to: "/debts" });
     }

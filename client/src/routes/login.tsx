@@ -15,6 +15,7 @@ const loginSchema = z.object({
 
 export const Route = createFileRoute("/login")({
   beforeLoad: async () => {
+    await useAuthStore.getState().initialize();
     if (useAuthStore.getState().isAuthenticated) {
       throw redirect({ to: "/debts" });
     }

@@ -41,7 +41,7 @@ export function LandingLayout({ children }: LandingLayoutProps) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col overflow-x-hidden">
       <header className="sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur-md dark:border-gray-700 dark:bg-gray-900/80">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <button onClick={() => handleNav("/")} className="text-xl font-bold text-blue-600 cursor-pointer">

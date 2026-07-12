@@ -94,7 +94,7 @@ export function UserSearch({ label, onSelect, placeholder = "Buscar usuario..." 
           </div>
         )}
         {open && results.length > 0 && (
-          <div className="absolute z-50 mt-1 w-full rounded-lg border bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
+          <div className="absolute z-50 mt-1 w-full max-w-[calc(100vw-3rem)] rounded-lg border bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
             {results.map((user) => (
               <button type="button" key={user.id} onClick={() => handleSelect(user)}
                 className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
@@ -111,7 +111,7 @@ export function UserSearch({ label, onSelect, placeholder = "Buscar usuario..." 
           </div>
         )}
         {open && results.length === 0 && query.length >= 2 && !loading && (
-          <div className="absolute z-50 mt-1 w-full rounded-lg border bg-white p-3 text-center text-sm text-gray-500 shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400">
+          <div className="absolute z-50 mt-1 w-full max-w-[calc(100vw-3rem)] rounded-lg border bg-white p-3 text-center text-sm text-gray-500 shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400">
             No se encontraron usuarios. Se guardará el nombre en texto.
           </div>
         )}

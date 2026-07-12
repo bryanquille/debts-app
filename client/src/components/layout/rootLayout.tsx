@@ -19,7 +19,7 @@ const navItems = [
   { href: "/profile", label: "Perfil", icon: User },
 ];
 
-function NotificationBell() {
+function NotificationBell({ dropdownAlign = "right" }: { dropdownAlign?: "left" | "right" }) {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -66,7 +66,7 @@ function NotificationBell() {
       {dropdownOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
-          <div className="absolute right-0 z-50 mt-2 w-80 rounded-xl border bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
+          <div className={`absolute z-50 mt-2 w-80 max-w-[calc(100vw-1rem)] rounded-xl border bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800 ${dropdownAlign === "left" ? "left-0" : "right-0"}`}>
             <div className="flex items-center justify-between border-b px-4 py-3 dark:border-gray-700">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Notificaciones</h3>
               <button onClick={() => { api.put("/notifications/read-all").catch(() => {}); }}
@@ -121,13 +121,14 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen overflow-x-hidden">
       {sidebarOpen && (
         <div className="fixed inset-0 z-30 bg-black/50 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
       <aside className="hidden w-64 flex-col border-r bg-white dark:border-gray-700 dark:bg-gray-800 md:flex">
-        <div className="flex h-14 items-center border-b px-6 dark:border-gray-700">
+        <div className="flex h-14 items-center justify-between border-b px-4 dark:border-gray-700">
           <h1 className="text-lg font-bold text-blue-600">Debts App</h1>
+          <NotificationBell dropdownAlign="left" />
         </div>
         <nav className="flex-1 space-y-1 p-4">
           {navItems.map((item) => {
@@ -150,7 +151,6 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
         <div className="border-t p-4 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <NotificationBell />
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-medium text-white">
               {user?.name?.charAt(0).toUpperCase()}
             </div>
@@ -193,9 +193,8 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="border-t p-4 dark:border-gray-700">
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3">
             <ThemeToggle />
-            <NotificationBell />
           </div>
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-medium text-white">

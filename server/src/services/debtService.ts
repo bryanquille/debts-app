@@ -225,23 +225,31 @@ export async function requestDeletion(debtId: string, userId: string) {
   }
 
   const counterpartyId = debt.creditorId === userId ? debt.debtorId : debt.creditorId;
+  const hasBothUsers = !!(debt.creditorId && debt.debtorId && debt.creditorId !== debt.debtorId);
+  const isSoloDeletion = !counterpartyId || !hasBothUsers;
+
+  if (isSoloDeletion) {
+    await prisma.debt.update({
+      where: { id: debtId },
+      data: { status: "CANCELLED", deletionRequestedBy: null },
+    });
+    return { message: "Debt cancelled" };
+  }
 
   await prisma.debt.update({
     where: { id: debtId },
     data: { deletionRequestedBy: userId },
   });
 
-  if (counterpartyId) {
-    const requesterName = debt.creditorId === userId ? "El acreedor" : "El deudor";
+  const requesterName = debt.creditorId === userId ? "El acreedor" : "El deudor";
 
-    await notificationService.createNotification({
-      userId: counterpartyId,
-      type: "DELETION_REQUEST",
-      title: "Solicitud de eliminación",
-      message: `${requesterName} solicita eliminar la deuda "${debt.description || "sin descripción"}"`,
-      debtId: debt.id,
-    });
-  }
+  await notificationService.createNotification({
+    userId: counterpartyId,
+    type: "DELETION_REQUEST",
+    title: "Solicitud de eliminación",
+    message: `${requesterName} solicita eliminar la deuda "${debt.description || "sin descripción"}"`,
+    debtId: debt.id,
+  });
 
   return { message: "Deletion request sent" };
 }
