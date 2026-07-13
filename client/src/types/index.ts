@@ -2,6 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  username: string;
   avatar: string | null;
 }
 
@@ -9,11 +10,8 @@ export type DebtStatus = "ACTIVE" | "PENDING_LIQUIDATION" | "SETTLED" | "CANCELL
 
 export interface Debt {
   id: string;
-  amount: number;
   description: string | null;
-  status: DebtStatus;
-  paidAmount: number;
-  creditorId: string;
+  creditorId: string | null;
   creditorName: string | null;
   debtorId: string | null;
   debtorName: string | null;
@@ -21,7 +19,10 @@ export interface Debt {
   dueDate: string | null;
   createdAt: string;
   updatedAt: string;
-  creditor: User;
+  paidAmount: number | string;
+  amount: number | string;
+  status: DebtStatus;
+  creditor: User | null;
   debtor: User | null;
   payments?: Payment[];
   _count?: { payments: number };
@@ -57,12 +58,13 @@ export interface AuthResponse {
 }
 
 export interface LoginInput {
-  email: string;
+  credential: string;
   password: string;
 }
 
 export interface RegisterInput {
   name: string;
   email: string;
+  username: string;
   password: string;
 }

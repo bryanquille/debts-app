@@ -26,11 +26,12 @@ const SALT_ROUNDS = 10;
 export interface RegisterInput {
   name: string;
   email: string;
+  username: string;
   password: string;
 }
 
 export interface LoginInput {
-  email: string;
+  credential: string;
   password: string;
 }
 
@@ -39,6 +40,7 @@ export interface AuthResult {
     id: string;
     name: string;
     email: string;
+    username: string;
     avatar: string | null;
   };
   accessToken: string;
@@ -46,23 +48,30 @@ export interface AuthResult {
 }
 
 export async function register(input: RegisterInput): Promise<AuthResult> {
-  // Verificar si el email ya está registrado
-  const existingUser = await prisma.user.findUnique({
+  const existingEmail = await prisma.user.findUnique({
     where: { email: input.email },
   });
 
-  if (existingUser) {
+  if (existingEmail) {
     throw new UnauthorizedError("Email already registered");
+  }
+
+  const existingUsername = await prisma.user.findUnique({
+    where: { username: input.username },
+  });
+
+  if (existingUsername) {
+    throw new UnauthorizedError("Username already taken");
   }
 
   // Hashear la contraseña antes de guardarla
   const hashedPassword = await bcrypt.hash(input.password, SALT_ROUNDS);
 
-  // Crear el usuario en la BD
   const user = await prisma.user.create({
     data: {
       name: input.name,
       email: input.email,
+      username: input.username,
       password: hashedPassword,
     },
   });
@@ -77,6 +86,7 @@ export async function register(input: RegisterInput): Promise<AuthResult> {
       id: user.id,
       name: user.name,
       email: user.email,
+      username: user.username,
       avatar: user.avatar,
     },
     accessToken,
@@ -85,24 +95,25 @@ export async function register(input: RegisterInput): Promise<AuthResult> {
 }
 
 export async function login(input: LoginInput): Promise<AuthResult> {
-  // Buscar usuario por email
-  const user = await prisma.user.findUnique({
-    where: { email: input.email },
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { email: input.credential },
+        { username: input.credential },
+      ],
+    },
   });
 
   if (!user) {
-    throw new UnauthorizedError("Invalid email or password");
+    throw new UnauthorizedError("Invalid credentials");
   }
 
-  // Comparar la contraseña ingresada con el hash almacenado
-  // bcrypt.compare() hashea la contraseña ingresada y la compara con el hash
   const isValidPassword = await bcrypt.compare(input.password, user.password);
 
   if (!isValidPassword) {
-    throw new UnauthorizedError("Invalid email or password");
+    throw new UnauthorizedError("Invalid credentials");
   }
 
-  // Generar tokens
   const payload: TokenPayload = { userId: user.id, email: user.email };
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
@@ -112,6 +123,7 @@ export async function login(input: LoginInput): Promise<AuthResult> {
       id: user.id,
       name: user.name,
       email: user.email,
+      username: user.username,
       avatar: user.avatar,
     },
     accessToken,

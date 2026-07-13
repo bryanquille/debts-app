@@ -19,7 +19,7 @@ export interface UpdateDebtInput {
 }
 
 export async function createDebt(input: CreateDebtInput) {
-  let creditorId: string;
+  let creditorId: string | null = null;
   let debtorId: string | null = null;
   let debtorName: string | null = null;
   let creditorName: string | null = null;
@@ -39,7 +39,7 @@ export async function createDebt(input: CreateDebtInput) {
       if (!counterparty) throw new NotFoundError("User not found");
       creditorId = input.counterpartyId;
     } else {
-      creditorId = input.creditorId;
+      creditorId = null;
       creditorName = input.counterpartyName || null;
     }
   }
@@ -117,7 +117,7 @@ export async function getDebtById(debtId: string, userId: string) {
 export async function updateDebt(debtId: string, userId: string, input: UpdateDebtInput) {
   const debt = await prisma.debt.findUnique({ where: { id: debtId } });
   if (!debt) throw new NotFoundError("Debt not found");
-  if (debt.creditorId !== userId) throw new ForbiddenError("Only the creditor can edit this debt");
+  if (debt.creditorId !== userId && debt.debtorId !== userId) throw new ForbiddenError("Only the creditor or debtor can edit this debt");
   if (debt.status !== "ACTIVE") throw new ForbiddenError("Cannot edit a debt that is not active");
 
   const updatedDebt = await prisma.debt.update({
@@ -141,6 +141,7 @@ export async function requestLiquidation(debtId: string, userId: string) {
   if (!debt) throw new NotFoundError("Debt not found");
   if (debt.debtorId !== userId) throw new ForbiddenError("Only the debtor can request liquidation");
   if (debt.status !== "ACTIVE") throw new ForbiddenError("Debt is not active");
+  if (!debt.creditorId) throw new ForbiddenError("Cannot request liquidation: no registered creditor");
   if (Number(debt.paidAmount) < Number(debt.amount)) {
     throw new ForbiddenError("Cannot request liquidation: total amount not yet paid");
   }
@@ -154,13 +155,15 @@ export async function requestLiquidation(debtId: string, userId: string) {
     },
   });
 
-  await notificationService.createNotification({
-    userId: debt.creditorId,
-    type: "LIQUIDATION_REQUEST",
-    title: "Solicitud de liquidación",
-    message: `El deudor ha solicitado liquidar la deuda "${debt.description || "sin descripción"}"`,
-    debtId: debt.id,
-  });
+  if (debt.creditorId) {
+    await notificationService.createNotification({
+      userId: debt.creditorId,
+      type: "LIQUIDATION_REQUEST",
+      title: "Solicitud de liquidación",
+      message: `El deudor ha solicitado liquidar la deuda "${debt.description || "sin descripción"}"`,
+      debtId: debt.id,
+    });
+  }
 
   return updatedDebt;
 }

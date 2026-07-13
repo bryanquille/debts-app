@@ -89,7 +89,7 @@ function DebtsPage() {
                 <p className="truncate text-sm text-gray-500 dark:text-gray-400">
                   {tab === "creditor"
                     ? (debt.debtor?.name || debt.debtorName || "Deudor no especificado")
-                    : (debt.creditor.name || debt.creditorName || "Acreedor no especificado")}
+                    : (debt.creditor?.name || debt.creditorName || "Acreedor no especificado")}
                 </p>
               </div>
               <div className="shrink-0 text-right">

@@ -78,7 +78,7 @@ function SettledDebtsPage() {
                   <p className="truncate text-sm text-gray-500 dark:text-gray-400">
                     {tab === "creditor"
                       ? (debt.debtor?.name || debt.debtorName || "Deudor")
-                      : (debt.creditor.name || debt.creditorName || "Acreedor")}
+                      : (debt.creditor?.name || debt.creditorName || "Acreedor")}
                   </p>
                 </div>
               </div>

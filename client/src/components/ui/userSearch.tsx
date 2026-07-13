@@ -104,7 +104,7 @@ export function UserSearch({ label, onSelect, placeholder = "Buscar usuario..." 
                 </div>
                 <div>
                   <p className="font-medium text-gray-900 dark:text-gray-100">{user.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">@{user.username} — {user.email}</p>
                 </div>
               </button>
             ))}

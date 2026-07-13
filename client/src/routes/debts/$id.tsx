@@ -113,7 +113,8 @@ function DebtDetailPage() {
   const canRegisterPayment = isDebtor || (isCreditor && debt.debtorId === null);
   const pendingDeletionFromMe = debt.deletionRequestedBy === user?.id;
   const pendingDeletionForMe = debt.deletionRequestedBy && debt.deletionRequestedBy !== user?.id;
-  const canEdit = isCreditor && debt.status === "ACTIVE";
+  const isSoloDebt = !debt.debtorId || debt.creditorId === debt.debtorId;
+  const canEdit = (isCreditor || (isDebtor && !debt.creditorId)) && debt.status === "ACTIVE";
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -134,7 +135,7 @@ function DebtDetailPage() {
               {isCreditor ? "Acreedor" : isDebtor ? "Deudor" : "Involucrado"} &middot;{" "}
               {isCreditor
                 ? (debt.debtor?.name || debt.debtorName || "Deudor no especificado")
-                : (debt.creditor.name || debt.creditorName || "Acreedor no especificado")}
+                : (debt.creditor?.name || debt.creditorName || "Acreedor no especificado")}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -149,7 +150,7 @@ function DebtDetailPage() {
             {isInvolved && debt.status !== "CANCELLED" && debt.status !== "SETTLED" && !pendingDeletionFromMe && !pendingDeletionForMe && (
               <button onClick={() => setDeleteModalOpen(true)}
                 className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-700 dark:hover:text-red-400 cursor-pointer"
-                title="Solicitar eliminacion"
+                title={isSoloDebt ? "Eliminar deuda" : "Solicitar eliminacion"}
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -281,8 +282,10 @@ function DebtDetailPage() {
         <EditDebtForm debt={debt} onSuccess={() => { setEditModalOpen(false); queryClient.invalidateQueries({ queryKey: ["debt", id] }); }} />
       </Modal>
 
-      <Modal open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Solicitar Eliminacion">
-        <DeleteDebtForm onConfirm={handleRequestDeletion} onCancel={() => setDeleteModalOpen(false)} />
+      <Modal open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)}
+        title={isSoloDebt ? "Eliminar Deuda" : "Solicitar Eliminacion"}
+      >
+        <DeleteDebtForm isSolo={isSoloDebt} onConfirm={handleRequestDeletion} onCancel={() => setDeleteModalOpen(false)} />
       </Modal>
     </div>
   );
@@ -336,15 +339,21 @@ function EditDebtForm({ debt, onSuccess }: { debt: Debt; onSuccess: () => void }
   );
 }
 
-function DeleteDebtForm({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
+function DeleteDebtForm({ isSolo, onConfirm, onCancel }: { isSolo: boolean; onConfirm: () => void; onCancel: () => void }) {
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-600 dark:text-gray-400">
-        Se notificara a la otra parte sobre tu solicitud de eliminacion. Ambos deben aprobar para que la deuda sea eliminada definitivamente.
-      </p>
+      {isSolo ? (
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          ¿Estas seguro de que deseas eliminar esta deuda?
+        </p>
+      ) : (
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Se notificara a la otra parte sobre tu solicitud de eliminacion. Ambos deben aprobar para que la deuda sea eliminada definitivamente.
+        </p>
+      )}
       <div className="flex gap-3">
         <Button variant="secondary" onClick={onCancel} className="flex-1">Cancelar</Button>
-        <Button variant="danger" onClick={onConfirm} className="flex-1">Solicitar Eliminacion</Button>
+        <Button variant="danger" onClick={onConfirm} className="flex-1">{isSolo ? "Eliminar" : "Solicitar Eliminacion"}</Button>
       </div>
     </div>
   );

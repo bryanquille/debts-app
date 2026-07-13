@@ -13,6 +13,9 @@ router.get("/me", userController.getProfile);
 // PUT /api/users/me — Actualizar mi perfil
 router.put("/me", userController.updateProfile);
 
+// PUT /api/users/me/password — Cambiar mi contraseña
+router.put("/me/password", userController.changePassword);
+
 // GET /api/users/search?q= — Buscar usuarios por nombre/email
 router.get("/search", userController.searchUsers);
 

@@ -16,6 +16,7 @@ enum DebtStatus {
 
 model User {
   id        String   @id @default(uuid())
+  username  String   @unique
   name      String
   email     String   @unique
   password  String
@@ -35,7 +36,7 @@ model Debt {
   description         String?
   status              DebtStatus @default(ACTIVE)
   paidAmount          Decimal    @default(0)
-  creditorId          String
+  creditorId          String?
   creditorName        String?
   debtorId            String?
   debtorName          String?
@@ -44,7 +45,7 @@ model Debt {
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
 
-  creditor User  @relation("Creditor", fields: [creditorId], references: [id])
+  creditor User? @relation("Creditor", fields: [creditorId], references: [id])
   debtor   User? @relation("Debtor", fields: [debtorId], references: [id])
   payments Payment[]
 }

@@ -3,6 +3,7 @@ import { Link, useLocation, useRouter } from "@tanstack/react-router";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui";
 import { ThemeToggle } from "@/components/ui/themeToggle";
+import { Modal } from "@/components/ui/modal";
 import {
   LogOut, ClipboardList, PlusCircle, CheckCircle2, User, Menu, X, Bell,
 } from "lucide-react";
@@ -111,8 +112,10 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   const handleLogout = async () => {
+    setLogoutConfirmOpen(false);
     try {
       await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     } catch {}
@@ -121,7 +124,7 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden">
+    <div className="flex h-screen overflow-hidden">
       {sidebarOpen && (
         <div className="fixed inset-0 z-30 bg-black/50 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
@@ -156,9 +159,9 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{user?.name}</p>
-              <p className="truncate text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
+              <p className="truncate text-xs text-gray-500 dark:text-gray-400">@{user?.username}</p>
             </div>
-            <button onClick={handleLogout} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
+            <button onClick={() => setLogoutConfirmOpen(true)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
               <LogOut className="h-4 w-4" />
             </button>
           </div>
@@ -202,9 +205,9 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{user?.name}</p>
-              <p className="truncate text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
+              <p className="truncate text-xs text-gray-500 dark:text-gray-400">@{user?.username}</p>
             </div>
-            <button onClick={() => { handleLogout(); setSidebarOpen(false); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
+            <button onClick={() => { setLogoutConfirmOpen(true); setSidebarOpen(false); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
               <LogOut className="h-4 w-4" />
             </button>
           </div>
@@ -222,13 +225,27 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
           <h1 className="text-lg font-bold text-blue-600">Debts App</h1>
           <div className="flex items-center gap-1">
             <NotificationBell />
-            <button onClick={handleLogout} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+            <button onClick={() => setLogoutConfirmOpen(true)} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
               <LogOut className="h-5 w-5" />
             </button>
           </div>
         </header>
-        <div className="flex-1 bg-gray-50 p-4 dark:bg-gray-950 sm:p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto bg-gray-50 p-4 dark:bg-gray-950 sm:p-6">{children}</div>
       </main>
+
+      <Modal open={logoutConfirmOpen} onClose={() => setLogoutConfirmOpen(false)} title="Cerrar sesión">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          ¿Estás seguro de que deseas cerrar sesión?
+        </p>
+        <div className="mt-6 flex justify-end gap-3">
+          <Button type="button" variant="secondary" onClick={() => setLogoutConfirmOpen(false)}>
+            Cancelar
+          </Button>
+          <Button type="button" variant="danger" onClick={handleLogout}>
+            Cerrar sesión
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

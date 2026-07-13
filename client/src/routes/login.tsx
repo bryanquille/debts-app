@@ -9,7 +9,7 @@ import api from "@/lib/axios";
 import type { AuthResponse, LoginInput } from "@/types";
 
 const loginSchema = z.object({
-  email: z.string().email("Correo invalido"),
+  credential: z.string().min(1, "Correo o usuario requerido"),
   password: z.string().min(1, "Contrasena requerida"),
 });
 
@@ -50,8 +50,8 @@ function LoginPage() {
         <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">Iniciar Sesion</h1>
         <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">Ingresa tus credenciales para acceder</p>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Input id="email" label="Correo electronico" type="email" placeholder="tu@correo.com"
-            error={errors.email?.message} {...register("email")} />
+          <Input id="credential" label="Correo o nombre de usuario" placeholder="tu@correo.com o @usuario"
+            error={errors.credential?.message} {...register("credential")} />
           <Input id="password" label="Contrasena" type="password" placeholder="......"
             error={errors.password?.message} showPasswordToggle {...register("password")} />
           <Button type="submit" loading={isSubmitting} className="w-full">Iniciar Sesion</Button>
