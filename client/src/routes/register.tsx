@@ -78,8 +78,8 @@ function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4 dark:bg-gray-900">
-      <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-lg dark:bg-gray-800">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4 dark:bg-gray-900">
+      <div className="w-full max-w-sm rounded-xl border border-gray-300 bg-white p-8 shadow-lg dark:border-gray-600 dark:bg-gray-800">
         <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">Crear Cuenta</h1>
         <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">Registrate para empezar a gestionar tus deudas</p>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

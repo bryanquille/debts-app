@@ -60,7 +60,7 @@ function LandingPage() {
             ].map((feature) => {
               const Icon = feature.icon;
               return (
-                <div key={feature.title} className="rounded-xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:bg-gray-800">
+                <div key={feature.title} className="rounded-xl border border-gray-300 bg-white p-6 shadow-md transition-shadow hover:shadow-lg dark:border-gray-600 dark:bg-gray-800">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                     <Icon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>

@@ -119,19 +119,19 @@ function DebtDetailPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <button onClick={() => router.history.back()}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer"
+        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer"
       >
         <ArrowLeft className="h-4 w-4" />
         Volver
       </button>
 
-      <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-6">
+      <div className="rounded-xl border border-gray-300 bg-white p-4 shadow-md dark:border-gray-600 dark:bg-gray-800 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 sm:text-2xl">
               {debt.description || "Deuda sin descripcion"}
             </h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
               {isCreditor ? "Acreedor" : isDebtor ? "Deudor" : "Involucrado"} &middot;{" "}
               {isCreditor
                 ? (debt.debtor?.name || debt.debtorName || "Deudor no especificado")
@@ -141,7 +141,7 @@ function DebtDetailPage() {
           <div className="flex items-center gap-2">
             {canEdit && (
               <button onClick={() => setEditModalOpen(true)}
-                className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-700 dark:hover:text-blue-400 cursor-pointer"
+                className="rounded-lg p-2 text-gray-500 hover:bg-gray-200 hover:text-blue-600 dark:hover:bg-gray-700 dark:hover:text-blue-400 cursor-pointer"
                 title="Editar deuda"
               >
                 <Edit3 className="h-4 w-4" />
@@ -149,7 +149,7 @@ function DebtDetailPage() {
             )}
             {isInvolved && debt.status !== "CANCELLED" && debt.status !== "SETTLED" && !pendingDeletionFromMe && !pendingDeletionForMe && (
               <button onClick={() => setDeleteModalOpen(true)}
-                className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-700 dark:hover:text-red-400 cursor-pointer"
+                className="rounded-lg p-2 text-gray-500 hover:bg-gray-200 hover:text-red-600 dark:hover:bg-gray-700 dark:hover:text-red-400 cursor-pointer"
                 title={isSoloDebt ? "Eliminar deuda" : "Solicitar eliminacion"}
               >
                 <Trash2 className="h-4 w-4" />
@@ -173,21 +173,21 @@ function DebtDetailPage() {
 
         <div className="mt-6 grid grid-cols-2 gap-3 border-t pt-6 dark:border-gray-700 sm:grid-cols-3 sm:gap-4">
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">Monto total</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">Monto total</p>
             <p className="text-base font-bold text-gray-900 dark:text-gray-100 sm:text-xl">{formatCurrency(debt.amount)}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">Pagado</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">Pagado</p>
             <p className="text-base font-bold text-green-600 dark:text-green-400 sm:text-xl">{formatCurrency(debt.paidAmount)}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">Restante</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">Restante</p>
             <p className="text-base font-bold text-red-600 dark:text-red-400 sm:text-xl">{formatCurrency(remaining)}</p>
           </div>
         </div>
 
         {debt.dueDate && (
-          <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
             Fecha limite: {formatDate(debt.dueDate)}
           </p>
         )}
@@ -232,10 +232,10 @@ function DebtDetailPage() {
         )}
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-6">
+      <div className="rounded-xl border border-gray-300 bg-white p-4 shadow-md dark:border-gray-600 dark:bg-gray-800 sm:p-6">
         <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Historial de Pagos</h2>
         {!debt.payments || debt.payments.length === 0 ? (
-          <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">No hay pagos registrados aun</p>
+          <p className="py-8 text-center text-sm text-gray-600 dark:text-gray-400">No hay pagos registrados aun</p>
         ) : (
           <div className="space-y-3">
             {debt.payments.map((payment) => (
@@ -246,10 +246,10 @@ function DebtDetailPage() {
                   </div>
                   <div>
                     <p className="font-medium text-gray-900 dark:text-gray-100">Pagado por {payment.user.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
                       {payment.paymentDate ? formatDate(payment.paymentDate) : formatDate(payment.createdAt)}
                     </p>
-                    {payment.note && <p className="text-xs text-gray-400 dark:text-gray-500">{payment.note}</p>}
+                    {payment.note && <p className="text-xs text-gray-500 dark:text-gray-500">{payment.note}</p>}
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">

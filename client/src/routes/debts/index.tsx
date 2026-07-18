@@ -35,12 +35,12 @@ function DebtsPage() {
         </Button>
       </div>
 
-      <div className="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+      <div className="flex gap-1 rounded-lg bg-gray-300 p-1 dark:bg-gray-800">
         <button onClick={() => setTab("creditor")}
           className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
             tab === "creditor"
               ? "bg-white text-blue-700 shadow-sm dark:bg-gray-700 dark:text-blue-400"
-              : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+              : "text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
           }`}
         >
           <ArrowUp className="h-4 w-4" />
@@ -50,7 +50,7 @@ function DebtsPage() {
           className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
             tab === "debtor"
               ? "bg-white text-blue-700 shadow-sm dark:bg-gray-700 dark:text-blue-400"
-              : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+              : "text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
           }`}
         >
           <ArrowDown className="h-4 w-4" />
@@ -65,7 +65,7 @@ function DebtsPage() {
       )}
 
       {debts?.length === 0 && (
-        <div className="rounded-xl border-2 border-dashed bg-white p-12 text-center dark:border-gray-600 dark:bg-gray-800">
+        <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white p-12 text-center dark:border-gray-600 dark:bg-gray-800">
           <p className="text-gray-500 dark:text-gray-400">
             {tab === "creditor" ? "No te deben dinero aun" : "No tienes deudas pendientes"}
           </p>
@@ -79,7 +79,7 @@ function DebtsPage() {
         {debts?.map((debt) => (
           <button key={debt.id}
             onClick={() => router.navigate({ to: "/debts/$id", params: { id: debt.id } })}
-            className="w-full rounded-xl border bg-white p-4 text-left transition-all hover:border-blue-300 hover:-translate-y-0.5 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-blue-500 cursor-pointer"
+            className="w-full rounded-xl border border-gray-300 bg-white p-4 text-left shadow-md transition-all hover:border-blue-400 hover:-translate-y-0.5 hover:shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:hover:border-blue-500 cursor-pointer"
           >
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0 flex-1">

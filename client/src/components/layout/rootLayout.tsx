@@ -82,7 +82,7 @@ function NotificationBell({ dropdownAlign = "right" }: { dropdownAlign?: "left" 
               ) : (
                 recent.map((n) => (
                   <button key={n.id} onClick={() => handleClick(n)}
-                    className={`w-full border-b px-4 py-3 text-left transition-colors last:border-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50 cursor-pointer ${n.read ? "" : "bg-blue-50 dark:bg-blue-900/20"}`}
+                    className={`w-full border-b px-4 py-3 text-left transition-colors last:border-0 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700/50 cursor-pointer ${n.read ? "" : "bg-blue-50 dark:bg-blue-900/20"}`}
                   >
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{n.title}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">{n.message}</p>
@@ -142,7 +142,7 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400"
-                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                    : "text-gray-800 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -159,9 +159,9 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{user?.name}</p>
-              <p className="truncate text-xs text-gray-500 dark:text-gray-400">@{user?.username}</p>
+              <p className="truncate text-xs text-gray-600 dark:text-gray-400">@{user?.username}</p>
             </div>
-            <button onClick={() => setLogoutConfirmOpen(true)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
+            <button onClick={() => setLogoutConfirmOpen(true)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer">
               <LogOut className="h-4 w-4" />
             </button>
           </div>
@@ -173,7 +173,7 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
       }`}>
         <div className="flex h-14 items-center justify-between border-b px-6 dark:border-gray-700">
           <h1 className="text-lg font-bold text-blue-600">Debts App</h1>
-          <button onClick={() => setSidebarOpen(false)} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+          <button onClick={() => setSidebarOpen(false)} className="rounded-lg p-1 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -186,7 +186,7 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400"
-                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                    : "text-gray-800 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -205,9 +205,9 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{user?.name}</p>
-              <p className="truncate text-xs text-gray-500 dark:text-gray-400">@{user?.username}</p>
+              <p className="truncate text-xs text-gray-600 dark:text-gray-400">@{user?.username}</p>
             </div>
-            <button onClick={() => { setLogoutConfirmOpen(true); setSidebarOpen(false); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
+            <button onClick={() => { setLogoutConfirmOpen(true); setSidebarOpen(false); }} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer">
               <LogOut className="h-4 w-4" />
             </button>
           </div>
@@ -217,7 +217,7 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
       <main className="flex flex-1 flex-col">
         <header className="flex h-14 items-center justify-between border-b bg-white px-4 dark:border-gray-700 dark:bg-gray-800 md:hidden">
           <div className="flex items-center gap-2">
-            <button onClick={() => setSidebarOpen(true)} className="rounded-lg p-1 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 cursor-pointer">
+            <button onClick={() => setSidebarOpen(true)} className="rounded-lg p-1 text-gray-700 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 cursor-pointer">
               <Menu className="h-6 w-6" />
             </button>
             <ThemeToggle />
@@ -225,12 +225,12 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
           <h1 className="text-lg font-bold text-blue-600">Debts App</h1>
           <div className="flex items-center gap-1">
             <NotificationBell />
-            <button onClick={() => setLogoutConfirmOpen(true)} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+            <button onClick={() => setLogoutConfirmOpen(true)} className="rounded-lg p-1 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer">
               <LogOut className="h-5 w-5" />
             </button>
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto bg-gray-50 p-4 dark:bg-gray-950 sm:p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto bg-gray-100 p-4 dark:bg-gray-950 sm:p-6">{children}</div>
       </main>
 
       <Modal open={logoutConfirmOpen} onClose={() => setLogoutConfirmOpen(false)} title="Cerrar sesión">

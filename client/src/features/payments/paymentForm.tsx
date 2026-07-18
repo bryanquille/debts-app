@@ -61,20 +61,20 @@ export function PaymentForm({ debtId, onSuccess }: PaymentFormProps) {
       <Input id="payment-date" label="Fecha del pago" type="date" error={errors.paymentDate?.message} {...register("paymentDate")} />
 
       <div className="space-y-1">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nota (opcional)</label>
+        <label className="block text-sm font-medium text-gray-800 dark:text-gray-300">Nota (opcional)</label>
         <textarea {...register("note")} rows={3}
-          className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+          className="block w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
           placeholder="Ej: Pago correspondiente a..." />
       </div>
 
       <div className="space-y-1">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Comprobante (opcional)</label>
-        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 p-4 text-sm text-gray-500 transition-colors hover:border-blue-400 hover:text-blue-600 dark:border-gray-600 dark:text-gray-400 dark:hover:border-blue-400 dark:hover:text-blue-400">
+        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 p-4 text-sm text-gray-600 transition-colors hover:border-blue-400 hover:text-blue-600 dark:border-gray-600 dark:text-gray-400 dark:hover:border-blue-400 dark:hover:text-blue-400">
           <Upload className="h-5 w-5" />
           <span>{selectedFile ? selectedFile.name : "Subir imagen (voucher, foto, etc.)"}</span>
           <input type="file" accept="image/*" className="hidden" onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)} />
         </label>
-        <p className="text-xs text-gray-400 dark:text-gray-500">Aun no configurado -- se integrara con Uploadthing proximamente</p>
+        <p className="text-xs text-gray-500 dark:text-gray-500">Aun no configurado -- se integrara con Uploadthing proximamente</p>
       </div>
 
       <Button type="submit" loading={isSubmitting} className="w-full">Registrar Pago</Button>

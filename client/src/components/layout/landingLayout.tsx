@@ -41,7 +41,7 @@ export function LandingLayout({ children }: LandingLayoutProps) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden">
+    <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur-md dark:border-gray-700 dark:bg-gray-900/80">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <button onClick={() => handleNav("/")} className="text-xl font-bold text-blue-600 cursor-pointer">
@@ -50,7 +50,7 @@ export function LandingLayout({ children }: LandingLayoutProps) {
           <nav className="hidden items-center gap-8 md:flex">
             {navLinks.map((link) => (
               <button key={link.href} onClick={() => handleNav(link.href)}
-                className="cursor-pointer text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+                className="cursor-pointer text-sm font-medium text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
               >
                 {link.label}
               </button>
@@ -66,7 +66,7 @@ export function LandingLayout({ children }: LandingLayoutProps) {
             </Button>
           </div>
           <button
-            className="cursor-pointer rounded-lg p-2 text-gray-600 hover:bg-gray-100 md:hidden dark:text-gray-400 dark:hover:bg-gray-700"
+            className="cursor-pointer rounded-lg p-2 text-gray-700 hover:bg-gray-200 md:hidden dark:text-gray-400 dark:hover:bg-gray-700"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -77,7 +77,7 @@ export function LandingLayout({ children }: LandingLayoutProps) {
             <nav className="mb-4 flex flex-col gap-3">
               {navLinks.map((link) => (
                 <button key={link.href} onClick={() => handleNav(link.href)}
-                  className="cursor-pointer rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                  className="cursor-pointer rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700"
                 >
                   {link.label}
                 </button>
@@ -96,17 +96,17 @@ export function LandingLayout({ children }: LandingLayoutProps) {
         )}
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="border-t bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+      <footer className="border-t bg-gray-100 dark:border-gray-700 dark:bg-gray-900">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               &copy; {new Date().getFullYear()} Debts App. Todos los derechos reservados.
             </p>
             <div className="flex gap-6">
-              <button onClick={() => handleNav("/#features")} className="cursor-pointer text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+              <button onClick={() => handleNav("/#features")} className="cursor-pointer text-sm text-gray-600 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
                 Caracteristicas
               </button>
-              <button onClick={() => handleNav("/#how-it-works")} className="cursor-pointer text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+              <button onClick={() => handleNav("/#how-it-works")} className="cursor-pointer text-sm text-gray-600 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
                 Como funciona
               </button>
             </div>

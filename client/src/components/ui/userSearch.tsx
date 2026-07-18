@@ -69,7 +69,7 @@ export function UserSearch({ label, onSelect, placeholder = "Buscar usuario..." 
 
   return (
     <div className="space-y-1" ref={containerRef}>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+      <label className="block text-sm font-medium text-gray-800 dark:text-gray-300">{label}</label>
       <div className="relative">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -78,7 +78,7 @@ export function UserSearch({ label, onSelect, placeholder = "Buscar usuario..." 
             value={query}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder={selectedUser ? selectedUser.name : placeholder}
-            className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-8 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+            className="block w-full rounded-lg border border-gray-400 bg-white py-2 pl-10 pr-8 text-sm text-gray-900 shadow-sm placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
           {query && (
             <button type="button" onClick={handleClear}
@@ -97,21 +97,21 @@ export function UserSearch({ label, onSelect, placeholder = "Buscar usuario..." 
           <div className="absolute z-50 mt-1 w-full max-w-[calc(100vw-3rem)] rounded-lg border bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
             {results.map((user) => (
               <button type="button" key={user.id} onClick={() => handleSelect(user)}
-                className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-700 dark:bg-blue-900 dark:text-blue-300">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <p className="font-medium text-gray-900 dark:text-gray-100">{user.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">@{user.username} — {user.email}</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">@{user.username} — {user.email}</p>
                 </div>
               </button>
             ))}
           </div>
         )}
         {open && results.length === 0 && query.length >= 2 && !loading && (
-          <div className="absolute z-50 mt-1 w-full max-w-[calc(100vw-3rem)] rounded-lg border bg-white p-3 text-center text-sm text-gray-500 shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400">
+          <div className="absolute z-50 mt-1 w-full max-w-[calc(100vw-3rem)] rounded-lg border bg-white p-3 text-center text-sm text-gray-600 shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400">
             No se encontraron usuarios. Se guardará el nombre en texto.
           </div>
         )}

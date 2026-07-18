@@ -49,13 +49,13 @@ function NotificationsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button onClick={() => router.history.back()}
-            className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+            className="rounded-lg p-1 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Notificaciones</h1>
-            <p className="text-gray-500 dark:text-gray-400">Historial de notificaciones</p>
+            <p className="text-gray-600 dark:text-gray-400">Historial de notificaciones</p>
           </div>
         </div>
         <Button variant="ghost" size="sm" onClick={handleMarkAllRead}>
@@ -71,26 +71,26 @@ function NotificationsPage() {
       )}
 
       {notifications?.length === 0 && (
-        <div className="rounded-xl border-2 border-dashed bg-white p-12 text-center dark:border-gray-600 dark:bg-gray-800">
-          <Bell className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
-          <p className="mt-4 text-gray-500 dark:text-gray-400">No tienes notificaciones</p>
+        <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white p-12 text-center dark:border-gray-600 dark:bg-gray-800">
+          <Bell className="mx-auto h-12 w-12 text-gray-500 dark:text-gray-500" />
+          <p className="mt-4 text-gray-600 dark:text-gray-400">No tienes notificaciones</p>
         </div>
       )}
 
       <div className="space-y-2">
         {notifications?.map((n) => (
           <button key={n.id} onClick={() => handleClick(n)}
-            className={`w-full rounded-xl border bg-white p-4 text-left transition-all hover:border-blue-300 hover:-translate-y-0.5 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-blue-500 cursor-pointer ${
+            className={`w-full rounded-xl border border-gray-300 bg-white p-4 text-left shadow-md transition-all hover:border-blue-400 hover:-translate-y-0.5 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-blue-500 cursor-pointer ${
               n.read ? "" : "border-l-4 border-l-blue-500"
             }`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className={`text-sm font-medium ${n.read ? "text-gray-700 dark:text-gray-300" : "text-gray-900 dark:text-gray-100"}`}>
+                <p className={`text-sm font-medium ${n.read ? "text-gray-800 dark:text-gray-300" : "text-gray-900 dark:text-gray-100"}`}>
                   {n.title}
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{n.message}</p>
-                <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                <p className="text-sm text-gray-600 dark:text-gray-400">{n.message}</p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
                   {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: es })}
                 </p>
               </div>

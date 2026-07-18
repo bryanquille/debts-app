@@ -40,7 +40,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
     >
       <div
         className={cn(
-          "w-full max-w-lg rounded-xl bg-white shadow-2xl animate-in fade-in zoom-in-95 dark:bg-gray-800",
+          "w-full max-w-lg rounded-xl border border-gray-300 bg-white shadow-2xl animate-in fade-in zoom-in-95 dark:border-gray-600 dark:bg-gray-800",
           className
         )}
       >
@@ -49,7 +49,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
             <button
               onClick={onClose}
-              className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+              className="rounded-lg p-1 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
             >
               <X className="h-5 w-5" />
             </button>

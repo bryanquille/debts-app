@@ -106,7 +106,7 @@ function ProfilePage() {
         <p className="text-gray-500 dark:text-gray-400">Administra tu informacion personal</p>
       </div>
 
-      <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
+      <div className="rounded-xl border border-gray-300 bg-white p-6 shadow-md dark:border-gray-600 dark:bg-gray-800">
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-2xl font-bold text-white">
             {profile?.name?.charAt(0).toUpperCase()}
@@ -118,7 +118,7 @@ function ProfilePage() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
+      <div className="rounded-xl border border-gray-300 bg-white p-6 shadow-md dark:border-gray-600 dark:bg-gray-800">
         <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Editar informacion</h3>
         <form onSubmit={profileForm.handleSubmit(onSaveProfile)} className="space-y-4">
           <Input id="p-name" label="Nombre completo" placeholder="Juan Perez"
@@ -147,7 +147,7 @@ function ProfilePage() {
         </form>
       </div>
 
-      <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
+      <div className="rounded-xl border border-gray-300 bg-white p-6 shadow-md dark:border-gray-600 dark:bg-gray-800">
         <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Cambiar contrasena</h3>
         <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4">
           <Input id="p-current" label="Contrasena actual" type="password" placeholder="Tu contrasena actual"

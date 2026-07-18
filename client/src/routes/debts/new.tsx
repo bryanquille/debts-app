@@ -69,11 +69,11 @@ function NewDebtPage() {
     <div className="mx-auto max-w-lg space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Nueva Deuda</h1>
-        <p className="text-gray-500 dark:text-gray-400">Registra una nueva deuda</p>
+        <p className="text-gray-600 dark:text-gray-400">Registra una nueva deuda</p>
       </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-xl border border-gray-300 bg-white p-6 shadow-md dark:border-gray-600 dark:bg-gray-800">
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Que estas haciendo?</label>
+          <label className="block text-sm font-medium text-gray-800 dark:text-gray-300">Que estas haciendo?</label>
           <div className="flex gap-2">
             <button type="button" onClick={() => setRole("creditor")}
               className={`flex-1 rounded-lg border px-4 py-3 text-sm font-medium transition-colors cursor-pointer ${

@@ -29,21 +29,21 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
         ))}
       </div>
       {label && (
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-gray-600 dark:text-gray-400">
           Fortaleza: <span className="font-medium">{label}</span>
         </p>
       )}
       <ul className="space-y-0.5">
-        <li className={`text-xs ${password.length >= 10 ? "text-green-500" : "text-gray-400"}`}>
+        <li className={`text-xs ${password.length >= 10 ? "text-green-500" : "text-gray-500"}`}>
           {password.length >= 10 ? "✓" : "○"} Mínimo 10 caracteres
         </li>
-        <li className={`text-xs ${/[A-Z]/.test(password) ? "text-green-500" : "text-gray-400"}`}>
+        <li className={`text-xs ${/[A-Z]/.test(password) ? "text-green-500" : "text-gray-500"}`}>
           {/[A-Z]/.test(password) ? "✓" : "○"} Al menos una mayúscula
         </li>
-        <li className={`text-xs ${/[0-9]/.test(password) ? "text-green-500" : "text-gray-400"}`}>
+        <li className={`text-xs ${/[0-9]/.test(password) ? "text-green-500" : "text-gray-500"}`}>
           {/[0-9]/.test(password) ? "✓" : "○"} Al menos un número
         </li>
-        <li className={`text-xs ${/[^A-Za-z0-9]/.test(password) ? "text-green-500" : "text-gray-400"}`}>
+        <li className={`text-xs ${/[^A-Za-z0-9]/.test(password) ? "text-green-500" : "text-gray-500"}`}>
           {/[^A-Za-z0-9]/.test(password) ? "✓" : "○"} Al menos un carácter especial
         </li>
       </ul>
